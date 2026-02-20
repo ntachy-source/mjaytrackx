@@ -14,13 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      devices: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          battery: number | null
+          created_at: string
+          device_id: string
+          id: string
+          lat: number
+          lng: number
+          speed: number | null
+          timestamp: string
+        }
+        Insert: {
+          battery?: number | null
+          created_at?: string
+          device_id: string
+          id?: string
+          lat: number
+          lng: number
+          speed?: number | null
+          timestamp?: string
+        }
+        Update: {
+          battery?: number | null
+          created_at?: string
+          device_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          speed?: number | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_owner_of_device: { Args: { _device_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

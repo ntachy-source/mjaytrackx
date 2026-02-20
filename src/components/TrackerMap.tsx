@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { Device } from "@/data/mockDevices";
+import { TrackedDevice } from "@/hooks/useDevices";
 
 interface TrackerMapProps {
-  devices: Device[];
-  selectedDevice: Device | null;
-  onSelectDevice: (device: Device) => void;
+  devices: TrackedDevice[];
+  selectedDevice: TrackedDevice | null;
+  onSelectDevice: (device: TrackedDevice) => void;
 }
 
-const createPulseIcon = (status: Device["status"]) => {
+const createPulseIcon = (status: TrackedDevice["status"]) => {
   const color = status === "online" ? "#00e676" : status === "idle" ? "#ffc107" : "#ff5252";
   return L.divIcon({
     className: "",
@@ -45,6 +45,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
     markersRef.current = [];
 
     devices.forEach((device) => {
+      if (!device.lat && !device.lng) return;
       const marker = L.marker([device.lat, device.lng], {
         icon: createPulseIcon(device.status),
       })
@@ -65,7 +66,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
       polylineRef.current.remove();
       polylineRef.current = null;
     }
-    if (selectedDevice) {
+    if (selectedDevice && selectedDevice.lat && selectedDevice.lng) {
       mapRef.current.flyTo([selectedDevice.lat, selectedDevice.lng], 14, { duration: 1 });
       if (selectedDevice.history.length > 1) {
         polylineRef.current = L.polyline(

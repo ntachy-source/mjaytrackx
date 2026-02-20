@@ -1,12 +1,14 @@
-import { Radar, Wifi, Shield } from "lucide-react";
-import { Device } from "@/data/mockDevices";
+import { Radar, Wifi, Shield, LogOut } from "lucide-react";
+import { TrackedDevice } from "@/hooks/useDevices";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StatusBarProps {
-  devices: Device[];
+  devices: TrackedDevice[];
 }
 
 const StatusBar = ({ devices }: StatusBarProps) => {
   const online = devices.filter((d) => d.status === "online").length;
+  const { signOut } = useAuth();
 
   return (
     <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-6 gap-6">
@@ -27,8 +29,17 @@ const StatusBar = ({ devices }: StatusBarProps) => {
           ENCRYPTED
         </span>
       </div>
-      <div className="ml-auto text-xs font-mono-data text-muted-foreground">
-        {new Date().toLocaleTimeString()} UTC
+      <div className="ml-auto flex items-center gap-4">
+        <span className="text-xs font-mono-data text-muted-foreground">
+          {new Date().toLocaleTimeString()}
+        </span>
+        <button
+          onClick={signOut}
+          className="text-muted-foreground hover:text-destructive transition-colors"
+          title="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );
