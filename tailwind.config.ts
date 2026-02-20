@@ -57,6 +57,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        warning: "hsl(var(--status-warning))",
+        online: "hsl(var(--pulse-online))",
+        offline: "hsl(var(--pulse-offline))",
       },
       borderRadius: {
         lg: "var(--radius)",
