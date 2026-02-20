@@ -1,14 +1,20 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Device } from "@/data/mockDevices";
-import { Smartphone, Battery, MapPin, Clock, Zap } from "lucide-react";
+import { TrackedDevice } from "@/hooks/useDevices";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2 } from "lucide-react";
+import AddDeviceDialog from "./AddDeviceDialog";
+import TrackingControls from "./TrackingControls";
 
 interface DevicePanelProps {
-  devices: Device[];
-  selectedDevice: Device | null;
-  onSelectDevice: (device: Device) => void;
+  devices: TrackedDevice[];
+  selectedDevice: TrackedDevice | null;
+  onSelectDevice: (device: TrackedDevice) => void;
+  onAddDevice: (name: string) => Promise<void>;
+  onDeleteDevice: (id: string) => Promise<void>;
+  onSendLocation: (deviceId: string, lat: number, lng: number, speed?: number) => Promise<void>;
+  loading: boolean;
 }
 
-const statusColor = (s: Device["status"]) =>
+const statusColor = (s: TrackedDevice["status"]) =>
   s === "online" ? "bg-online" : s === "idle" ? "bg-warning" : "bg-offline";
 
 const formatTime = (d: Date) => {
@@ -18,50 +24,86 @@ const formatTime = (d: Date) => {
   return `${Math.floor(mins / 60)}h ago`;
 };
 
-const DevicePanel = ({ devices, selectedDevice, onSelectDevice }: DevicePanelProps) => {
+const DevicePanel = ({
+  devices,
+  selectedDevice,
+  onSelectDevice,
+  onAddDevice,
+  onDeleteDevice,
+  onSendLocation,
+  loading,
+}: DevicePanelProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
         <h2 className="text-sm font-mono-data uppercase tracking-widest text-muted-foreground">
-          Tracked Devices
+          Your Devices
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
           {devices.filter((d) => d.status === "online").length} / {devices.length} online
         </p>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        <AnimatePresence>
-          {devices.map((device) => (
-            <motion.button
-              key={device.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              onClick={() => onSelectDevice(device)}
-              className={`w-full text-left p-3 rounded-lg transition-all ${
-                selectedDevice?.id === device.id
-                  ? "bg-accent/20 border-glow border"
-                  : "hover:bg-muted border border-transparent"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Smartphone className="w-5 h-5 text-primary" />
-                  <span
-                    className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${statusColor(device.status)} border-2 border-background`}
-                  />
+        {loading ? (
+          <div className="p-4 text-center text-muted-foreground text-sm font-mono-data">
+            Loading...
+          </div>
+        ) : devices.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground text-sm font-mono-data">
+            No devices registered yet
+          </div>
+        ) : (
+          <AnimatePresence>
+            {devices.map((device) => (
+              <motion.button
+                key={device.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                onClick={() => onSelectDevice(device)}
+                className={`w-full text-left p-3 rounded-lg transition-all ${
+                  selectedDevice?.id === device.id
+                    ? "bg-accent/20 border-glow border"
+                    : "hover:bg-muted border border-transparent"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Smartphone className="w-5 h-5 text-primary" />
+                    <span
+                      className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ${statusColor(device.status)} border-2 border-background`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
+                    <p className="text-xs text-muted-foreground font-mono-data">
+                      {formatTime(device.lastSeen)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {device.battery > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Battery className="w-3 h-3" />
+                        <span className="font-mono-data">{device.battery}%</span>
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteDevice(device.id);
+                      }}
+                      className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{device.name}</p>
-                  <p className="text-xs text-muted-foreground font-mono-data">{device.userId}</p>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Battery className="w-3 h-3" />
-                  <span className="font-mono-data">{device.battery}%</span>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </AnimatePresence>
+              </motion.button>
+            ))}
+          </AnimatePresence>
+        )}
+        <div className="pt-2">
+          <AddDeviceDialog onAdd={onAddDevice} />
+        </div>
       </div>
 
       {/* Device detail */}
@@ -87,6 +129,8 @@ const DevicePanel = ({ devices, selectedDevice, onSelectDevice }: DevicePanelPro
           </motion.div>
         )}
       </AnimatePresence>
+
+      <TrackingControls device={selectedDevice} onSendLocation={onSendLocation} />
     </div>
   );
 };
