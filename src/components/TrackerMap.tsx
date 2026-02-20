@@ -69,7 +69,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
       mapRef.current.flyTo([selectedDevice.lat, selectedDevice.lng], 14, { duration: 1 });
       if (selectedDevice.history.length > 1) {
         polylineRef.current = L.polyline(
-          selectedDevice.history.map((h) => [h.lat, h.lng]),
+          selectedDevice.history.map((h) => [h.lat, h.lng] as L.LatLngTuple),
           { color: "#00e676", weight: 2, opacity: 0.6, dashArray: "6 4" }
         ).addTo(mapRef.current);
       }
