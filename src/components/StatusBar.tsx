@@ -11,15 +11,15 @@ const StatusBar = ({ devices }: StatusBarProps) => {
   const { signOut } = useAuth();
 
   return (
-    <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-6 gap-6">
+    <header className="h-12 md:h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-3 md:px-6 gap-3 md:gap-6">
       <div className="flex items-center gap-2">
-        <Radar className="w-5 h-5 text-primary text-glow" />
-        <span className="font-bold text-foreground tracking-tight text-lg">
+        <Radar className="w-4 h-4 md:w-5 md:h-5 text-primary text-glow" />
+        <span className="font-bold text-foreground tracking-tight text-base md:text-lg">
           TRACK<span className="text-primary">X</span>
         </span>
       </div>
-      <div className="h-6 w-px bg-border" />
-      <div className="flex items-center gap-4 text-xs font-mono-data text-muted-foreground">
+      <div className="h-6 w-px bg-border hidden sm:block" />
+      <div className="hidden sm:flex items-center gap-4 text-xs font-mono-data text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <Wifi className="w-3.5 h-3.5 text-primary" />
           <span className="text-foreground">{online}</span> ACTIVE
@@ -29,8 +29,12 @@ const StatusBar = ({ devices }: StatusBarProps) => {
           ENCRYPTED
         </span>
       </div>
-      <div className="ml-auto flex items-center gap-4">
-        <span className="text-xs font-mono-data text-muted-foreground">
+      <div className="ml-auto flex items-center gap-2 md:gap-4">
+        <span className="text-xs font-mono-data text-muted-foreground flex items-center gap-1.5 sm:hidden">
+          <Wifi className="w-3 h-3 text-primary" />
+          {online}
+        </span>
+        <span className="text-xs font-mono-data text-muted-foreground hidden md:block">
           {new Date().toLocaleTimeString()}
         </span>
         <button
