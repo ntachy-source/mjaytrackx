@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
-import { Smartphone, Battery, MapPin, Clock, Zap, Trash2 } from "lucide-react";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
 import TrackingControls from "./TrackingControls";
 
@@ -8,7 +8,7 @@ interface DevicePanelProps {
   devices: TrackedDevice[];
   selectedDevice: TrackedDevice | null;
   onSelectDevice: (device: TrackedDevice) => void;
-  onAddDevice: (name: string) => Promise<void>;
+  onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
   onSendLocation: (deviceId: string, lat: number, lng: number, speed?: number) => Promise<void>;
   loading: boolean;
@@ -124,6 +124,12 @@ const DevicePanel = ({
                 <InfoRow icon={<MapPin className="w-3 h-3" />} label="Lng" value={selectedDevice.lng.toFixed(4)} />
                 <InfoRow icon={<Zap className="w-3 h-3" />} label="Speed" value={`${selectedDevice.speed} km/h`} />
                 <InfoRow icon={<Clock className="w-3 h-3" />} label="Seen" value={formatTime(selectedDevice.lastSeen)} />
+                {selectedDevice.imei && (
+                  <InfoRow icon={<Hash className="w-3 h-3" />} label="IMEI" value={selectedDevice.imei} />
+                )}
+                {selectedDevice.phoneNumber && (
+                  <InfoRow icon={<Phone className="w-3 h-3" />} label="Phone" value={selectedDevice.phoneNumber} />
+                )}
               </div>
             </div>
           </motion.div>
@@ -139,7 +145,7 @@ const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string;
   <div className="flex items-center gap-2 bg-muted rounded p-2">
     <span className="text-primary">{icon}</span>
     <span className="text-muted-foreground">{label}</span>
-    <span className="ml-auto font-mono-data text-foreground">{value}</span>
+    <span className="ml-auto font-mono-data text-foreground truncate">{value}</span>
   </div>
 );
 
