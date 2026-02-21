@@ -7,6 +7,8 @@ export interface DeviceRow {
   id: string;
   user_id: string;
   name: string;
+  imei: string | null;
+  phone_number: string | null;
   created_at: string;
 }
 
@@ -23,6 +25,8 @@ export interface LocationRow {
 export interface TrackedDevice {
   id: string;
   name: string;
+  imei: string | null;
+  phoneNumber: string | null;
   lat: number;
   lng: number;
   battery: number;
@@ -71,6 +75,8 @@ export const useDevices = () => {
       trackedDevices.push({
         id: dev.id,
         name: dev.name,
+        imei: dev.imei,
+        phoneNumber: dev.phone_number,
         lat: latest?.lat ?? 0,
         lng: latest?.lng ?? 0,
         battery: latest?.battery ?? 100,
@@ -89,9 +95,14 @@ export const useDevices = () => {
     setLoading(false);
   }, [user, toast]);
 
-  const addDevice = async (name: string) => {
+  const addDevice = async (name: string, imei?: string, phoneNumber?: string) => {
     if (!user) return;
-    const { error } = await supabase.from("devices").insert({ name, user_id: user.id });
+    const { error } = await supabase.from("devices").insert({
+      name,
+      user_id: user.id,
+      imei: imei || null,
+      phone_number: phoneNumber || null,
+    });
     if (error) {
       toast({ title: "Error adding device", description: error.message, variant: "destructive" });
     } else {

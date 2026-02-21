@@ -5,11 +5,13 @@ import StatusBar from "@/components/StatusBar";
 import { useDevices, TrackedDevice } from "@/hooks/useDevices";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { devices, loading, addDevice, deleteDevice, sendLocation } = useDevices();
   const [selectedDevice, setSelectedDevice] = useState<TrackedDevice | null>(null);
+  const [panelOpen, setPanelOpen] = useState(true);
 
   const handleSelectDevice = useCallback((device: TrackedDevice) => {
     setSelectedDevice((prev) => (prev?.id === device.id ? null : device));
@@ -25,33 +27,49 @@ const Index = () => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  // Keep selected device in sync
   const syncedSelected = selectedDevice
     ? devices.find((d) => d.id === selectedDevice.id) ?? null
     : null;
 
   return (
-    <div className="flex flex-col h-screen bg-background scanline">
-      <StatusBar devices={devices} />
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 border-r border-border bg-card/50 backdrop-blur-sm flex-shrink-0">
-          <DevicePanel
-            devices={devices}
-            selectedDevice={syncedSelected}
-            onSelectDevice={handleSelectDevice}
-            onAddDevice={addDevice}
-            onDeleteDevice={deleteDevice}
-            onSendLocation={sendLocation}
-            loading={loading}
-          />
-        </aside>
-        <main className="flex-1 p-3">
-          <TrackerMap
-            devices={devices}
-            selectedDevice={syncedSelected}
-            onSelectDevice={handleSelectDevice}
-          />
-        </main>
+    <div className="relative h-screen w-screen bg-background overflow-hidden">
+      {/* Full-screen map */}
+      <div className="absolute inset-0 z-0">
+        <TrackerMap
+          devices={devices}
+          selectedDevice={syncedSelected}
+          onSelectDevice={handleSelectDevice}
+        />
+      </div>
+
+      {/* Status bar overlay */}
+      <div className="absolute top-0 left-0 right-0 z-20">
+        <StatusBar devices={devices} />
+      </div>
+
+      {/* Toggle panel button */}
+      <button
+        onClick={() => setPanelOpen(!panelOpen)}
+        className="absolute top-14 left-3 z-30 bg-card/90 backdrop-blur-sm border border-border rounded-lg p-2 text-primary hover:bg-card transition-colors"
+      >
+        {panelOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
+      </button>
+
+      {/* Floating device panel */}
+      <div
+        className={`absolute top-24 left-3 bottom-3 z-20 w-80 bg-card/90 backdrop-blur-md border border-border rounded-lg overflow-hidden transition-transform duration-300 ${
+          panelOpen ? "translate-x-0" : "-translate-x-[calc(100%+12px)]"
+        }`}
+      >
+        <DevicePanel
+          devices={devices}
+          selectedDevice={syncedSelected}
+          onSelectDevice={handleSelectDevice}
+          onAddDevice={addDevice}
+          onDeleteDevice={deleteDevice}
+          onSendLocation={sendLocation}
+          loading={loading}
+        />
       </div>
     </div>
   );

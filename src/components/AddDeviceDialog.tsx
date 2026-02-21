@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/dialog";
 
 interface AddDeviceDialogProps {
-  onAdd: (name: string) => Promise<void>;
+  onAdd: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
 }
 
 const AddDeviceDialog = ({ onAdd }: AddDeviceDialogProps) => {
   const [name, setName] = useState("");
+  const [imei, setImei] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -21,8 +23,10 @@ const AddDeviceDialog = ({ onAdd }: AddDeviceDialogProps) => {
     e.preventDefault();
     if (!name.trim()) return;
     setLoading(true);
-    await onAdd(name.trim());
+    await onAdd(name.trim(), imei.trim() || undefined, phoneNumber.trim() || undefined);
     setName("");
+    setImei("");
+    setPhoneNumber("");
     setOpen(false);
     setLoading(false);
   };
@@ -50,6 +54,22 @@ const AddDeviceDialog = ({ onAdd }: AddDeviceDialogProps) => {
             onChange={(e) => setName(e.target.value)}
             className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground font-mono-data text-sm focus:outline-none focus:ring-1 focus:ring-primary"
             required
+          />
+          <input
+            type="text"
+            placeholder="IMEI Number (e.g. 353456789012345)"
+            value={imei}
+            onChange={(e) => setImei(e.target.value.replace(/\D/g, "").slice(0, 15))}
+            className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground font-mono-data text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            pattern="\d{15}"
+            title="IMEI must be exactly 15 digits"
+          />
+          <input
+            type="tel"
+            placeholder="Phone Number (e.g. +1234567890)"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            className="w-full bg-muted border border-border rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground font-mono-data text-sm focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <button
             type="submit"
