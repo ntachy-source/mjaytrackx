@@ -1,6 +1,8 @@
-import { Radar, Wifi, Shield, LogOut } from "lucide-react";
+import { Radar, Wifi, Shield, LogOut, ShieldCheck } from "lucide-react";
 import { TrackedDevice } from "@/hooks/useDevices";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRole } from "@/hooks/useRole";
+import { useNavigate } from "react-router-dom";
 
 interface StatusBarProps {
   devices: TrackedDevice[];
@@ -9,6 +11,8 @@ interface StatusBarProps {
 const StatusBar = ({ devices }: StatusBarProps) => {
   const online = devices.filter((d) => d.status === "online").length;
   const { signOut } = useAuth();
+  const { isAdmin } = useRole();
+  const navigate = useNavigate();
 
   return (
     <header className="h-12 md:h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-3 md:px-6 gap-3 md:gap-6">
