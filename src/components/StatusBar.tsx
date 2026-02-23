@@ -41,6 +41,15 @@ const StatusBar = ({ devices }: StatusBarProps) => {
         <span className="text-xs font-mono-data text-muted-foreground hidden md:block">
           {new Date().toLocaleTimeString()}
         </span>
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/admin")}
+            className="text-primary hover:text-accent-foreground transition-colors"
+            title="Admin Dashboard"
+          >
+            <ShieldCheck className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={signOut}
           className="text-muted-foreground hover:text-destructive transition-colors"
