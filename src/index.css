@@ -98,7 +98,7 @@
   background: hsl(220 20% 7%) !important;
 }
 .leaflet-tile-pane {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  filter: brightness(0.7) invert(1) contrast(1.2) hue-rotate(200deg) saturate(0.4) brightness(0.8);
 }
 .leaflet-control-zoom a {
   background: hsl(220 18% 10%) !important;
