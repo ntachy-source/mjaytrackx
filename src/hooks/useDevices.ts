@@ -27,6 +27,7 @@ export interface TrackedDevice {
   name: string;
   imei: string | null;
   phoneNumber: string | null;
+  shareToken: string | null;
   lat: number;
   lng: number;
   battery: number;
