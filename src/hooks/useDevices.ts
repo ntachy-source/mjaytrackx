@@ -134,6 +134,20 @@ export const useDevices = () => {
     }
   };
 
+  const generateShareToken = async (deviceId: string): Promise<string | null> => {
+    const token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const { error } = await supabase
+      .from("devices")
+      .update({ share_token: token } as any)
+      .eq("id", deviceId);
+    if (error) {
+      toast({ title: "Error generating link", description: error.message, variant: "destructive" });
+      return null;
+    }
+    await fetchDevices();
+    return token;
+  };
+
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
