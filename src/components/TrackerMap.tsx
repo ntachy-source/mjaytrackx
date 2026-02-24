@@ -37,7 +37,7 @@ const myLocationIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps) => {
+const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice }: TrackerMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
