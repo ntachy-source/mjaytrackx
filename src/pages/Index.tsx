@@ -48,6 +48,7 @@ const Index = () => {
       onSelectDevice={handleSelectDevice}
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
+      onGenerateShareToken={generateShareToken}
       following={followingDevice}
       onToggleFollow={() => setFollowingDevice((f) => !f)}
       loading={loading}
