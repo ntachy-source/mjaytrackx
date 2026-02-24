@@ -18,7 +18,13 @@ const Index = () => {
   const isMobile = useIsMobile();
 
   const handleSelectDevice = useCallback((device: TrackedDevice) => {
-    setSelectedDevice((prev) => (prev?.id === device.id ? null : device));
+    setSelectedDevice((prev) => {
+      if (prev?.id === device.id) {
+        setFollowingDevice(false);
+        return null;
+      }
+      return device;
+    });
   }, []);
 
   if (authLoading) {
