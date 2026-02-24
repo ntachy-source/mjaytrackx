@@ -94,7 +94,7 @@ const TrackPage = () => {
               Your GPS position is being shared live. Keep this page open.
             </p>
             <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <CheckCircle className="w-4 h-4 text-green-500" />
+              <CheckCircle className="w-4 h-4 text-primary" />
               <span>{sendCount} update{sendCount !== 1 ? "s" : ""} sent</span>
             </div>
           </>
