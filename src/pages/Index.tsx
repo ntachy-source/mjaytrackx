@@ -62,6 +62,7 @@ const Index = () => {
           devices={devices}
           selectedDevice={syncedSelected}
           onSelectDevice={handleSelectDevice}
+          followDevice={followingDevice}
         />
       </div>
 
