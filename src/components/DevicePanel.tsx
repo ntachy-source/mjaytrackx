@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
-import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone } from "lucide-react";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, Copy, CheckCircle } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
 import TrackingControls from "./TrackingControls";
 
