@@ -23,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/track/:token" element={<TrackPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
