@@ -48,7 +48,8 @@ const Index = () => {
       onSelectDevice={handleSelectDevice}
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
-      onSendLocation={sendLocation}
+      following={followingDevice}
+      onToggleFollow={() => setFollowingDevice((f) => !f)}
       loading={loading}
     />
   );
