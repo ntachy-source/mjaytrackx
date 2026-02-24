@@ -33,10 +33,28 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
+  onGenerateShareToken,
   following,
   onToggleFollow,
   loading,
 }: DevicePanelProps) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+
+  const handleShareLink = async (device: TrackedDevice) => {
+    let token = device.shareToken;
+    if (!token) {
+      setGenerating(true);
+      token = await onGenerateShareToken(device.id);
+      setGenerating(false);
+    }
+    if (token) {
+      const url = `${window.location.origin}/track/${token}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedId(device.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
