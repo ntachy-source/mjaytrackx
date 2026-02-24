@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
-  const { devices, loading, addDevice, deleteDevice, sendLocation } = useDevices();
+  const { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken } = useDevices();
   const [selectedDevice, setSelectedDevice] = useState<TrackedDevice | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [followingDevice, setFollowingDevice] = useState(false);
