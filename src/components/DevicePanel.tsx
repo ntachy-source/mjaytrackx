@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
-import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone } from "lucide-react";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, Copy, CheckCircle } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
 import TrackingControls from "./TrackingControls";
 
@@ -10,6 +11,7 @@ interface DevicePanelProps {
   onSelectDevice: (device: TrackedDevice) => void;
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
+  onGenerateShareToken: (deviceId: string) => Promise<string | null>;
   following: boolean;
   onToggleFollow: () => void;
   loading: boolean;
@@ -31,10 +33,28 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
+  onGenerateShareToken,
   following,
   onToggleFollow,
   loading,
 }: DevicePanelProps) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+
+  const handleShareLink = async (device: TrackedDevice) => {
+    let token = device.shareToken;
+    if (!token) {
+      setGenerating(true);
+      token = await onGenerateShareToken(device.id);
+      setGenerating(false);
+    }
+    if (token) {
+      const url = `${window.location.origin}/track/${token}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedId(device.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
@@ -133,6 +153,24 @@ const DevicePanel = ({
                   <InfoRow icon={<Phone className="w-3 h-3" />} label="Phone" value={selectedDevice.phoneNumber} />
                 )}
               </div>
+              {/* Share tracking link button */}
+              <button
+                onClick={() => handleShareLink(selectedDevice)}
+                disabled={generating}
+                className="w-full mt-2 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-mono-data flex items-center justify-center gap-2 hover:bg-accent/80 transition-colors"
+              >
+                {copiedId === selectedDevice.id ? (
+                  <>
+                    <CheckCircle className="w-3.5 h-3.5" /> LINK COPIED!
+                  </>
+                ) : generating ? (
+                  <>GENERATING...</>
+                ) : (
+                  <>
+                    <Link className="w-3.5 h-3.5" /> SHARE TRACKING LINK
+                  </>
+                )}
+              </button>
             </div>
           </motion.div>
         )}

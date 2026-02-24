@@ -27,6 +27,7 @@ export interface TrackedDevice {
   name: string;
   imei: string | null;
   phoneNumber: string | null;
+  shareToken: string | null;
   lat: number;
   lng: number;
   battery: number;
@@ -77,6 +78,7 @@ export const useDevices = () => {
         name: dev.name,
         imei: dev.imei,
         phoneNumber: dev.phone_number,
+        shareToken: (dev as any).share_token ?? null,
         lat: latest?.lat ?? 0,
         lng: latest?.lng ?? 0,
         battery: latest?.battery ?? 100,
@@ -132,6 +134,20 @@ export const useDevices = () => {
     }
   };
 
+  const generateShareToken = async (deviceId: string): Promise<string | null> => {
+    const token = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const { error } = await supabase
+      .from("devices")
+      .update({ share_token: token } as any)
+      .eq("id", deviceId);
+    if (error) {
+      toast({ title: "Error generating link", description: error.message, variant: "destructive" });
+      return null;
+    }
+    await fetchDevices();
+    return token;
+  };
+
   // Realtime subscription
   useEffect(() => {
     if (!user) return;
@@ -153,5 +169,5 @@ export const useDevices = () => {
     };
   }, [user, fetchDevices]);
 
-  return { devices, loading, addDevice, deleteDevice, sendLocation, refetch: fetchDevices };
+  return { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken, refetch: fetchDevices };
 };
