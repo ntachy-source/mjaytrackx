@@ -31,7 +31,8 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
-  onSendLocation,
+  following,
+  onToggleFollow,
   loading,
 }: DevicePanelProps) => {
   return (
