@@ -169,5 +169,5 @@ export const useDevices = () => {
     };
   }, [user, fetchDevices]);
 
-  return { devices, loading, addDevice, deleteDevice, sendLocation, refetch: fetchDevices };
+  return { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken, refetch: fetchDevices };
 };
