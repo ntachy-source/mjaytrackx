@@ -11,6 +11,7 @@ interface DevicePanelProps {
   onSelectDevice: (device: TrackedDevice) => void;
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
+  onGenerateShareToken: (deviceId: string) => Promise<string | null>;
   following: boolean;
   onToggleFollow: () => void;
   loading: boolean;
