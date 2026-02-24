@@ -7,6 +7,7 @@ interface TrackerMapProps {
   devices: TrackedDevice[];
   selectedDevice: TrackedDevice | null;
   onSelectDevice: (device: TrackedDevice) => void;
+  followDevice?: boolean;
 }
 
 const createPulseIcon = (status: TrackedDevice["status"]) => {
