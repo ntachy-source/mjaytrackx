@@ -138,7 +138,7 @@ const DevicePanel = ({
         )}
       </AnimatePresence>
 
-      <TrackingControls device={selectedDevice} onSendLocation={onSendLocation} />
+      <TrackingControls device={selectedDevice} following={following} onToggleFollow={onToggleFollow} />
     </div>
   );
 };
