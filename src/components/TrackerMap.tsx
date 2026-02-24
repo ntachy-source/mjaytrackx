@@ -7,6 +7,7 @@ interface TrackerMapProps {
   devices: TrackedDevice[];
   selectedDevice: TrackedDevice | null;
   onSelectDevice: (device: TrackedDevice) => void;
+  followDevice?: boolean;
 }
 
 const createPulseIcon = (status: TrackedDevice["status"]) => {
@@ -36,7 +37,7 @@ const myLocationIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps) => {
+const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice }: TrackerMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
@@ -91,7 +92,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
     }
   }, [devices, onSelectDevice, selectedDevice]);
 
-  // Fly to selected device
+  // Fly to selected device & follow on updates
   useEffect(() => {
     if (!mapRef.current) return;
     if (polylineRef.current) {
@@ -99,7 +100,9 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
       polylineRef.current = null;
     }
     if (selectedDevice && (selectedDevice.lat !== 0 || selectedDevice.lng !== 0)) {
-      mapRef.current.flyTo([selectedDevice.lat, selectedDevice.lng], 17, { duration: 1 });
+      if (followDevice) {
+        mapRef.current.flyTo([selectedDevice.lat, selectedDevice.lng], 17, { duration: 1 });
+      }
       if (selectedDevice.history.length > 1) {
         polylineRef.current = L.polyline(
           selectedDevice.history.map((h) => [h.lat, h.lng] as L.LatLngTuple),
@@ -107,7 +110,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice }: TrackerMapProps
         ).addTo(mapRef.current);
       }
     }
-  }, [selectedDevice]);
+  }, [selectedDevice, followDevice]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation || !mapRef.current) return;

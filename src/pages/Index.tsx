@@ -14,10 +14,17 @@ const Index = () => {
   const { devices, loading, addDevice, deleteDevice, sendLocation } = useDevices();
   const [selectedDevice, setSelectedDevice] = useState<TrackedDevice | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
+  const [followingDevice, setFollowingDevice] = useState(false);
   const isMobile = useIsMobile();
 
   const handleSelectDevice = useCallback((device: TrackedDevice) => {
-    setSelectedDevice((prev) => (prev?.id === device.id ? null : device));
+    setSelectedDevice((prev) => {
+      if (prev?.id === device.id) {
+        setFollowingDevice(false);
+        return null;
+      }
+      return device;
+    });
   }, []);
 
   if (authLoading) {
@@ -41,7 +48,8 @@ const Index = () => {
       onSelectDevice={handleSelectDevice}
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
-      onSendLocation={sendLocation}
+      following={followingDevice}
+      onToggleFollow={() => setFollowingDevice((f) => !f)}
       loading={loading}
     />
   );
@@ -54,6 +62,7 @@ const Index = () => {
           devices={devices}
           selectedDevice={syncedSelected}
           onSelectDevice={handleSelectDevice}
+          followDevice={followingDevice}
         />
       </div>
 

@@ -10,7 +10,8 @@ interface DevicePanelProps {
   onSelectDevice: (device: TrackedDevice) => void;
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
-  onSendLocation: (deviceId: string, lat: number, lng: number, speed?: number) => Promise<void>;
+  following: boolean;
+  onToggleFollow: () => void;
   loading: boolean;
 }
 
@@ -30,7 +31,8 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
-  onSendLocation,
+  following,
+  onToggleFollow,
   loading,
 }: DevicePanelProps) => {
   return (
@@ -136,7 +138,7 @@ const DevicePanel = ({
         )}
       </AnimatePresence>
 
-      <TrackingControls device={selectedDevice} onSendLocation={onSendLocation} />
+      <TrackingControls device={selectedDevice} following={following} onToggleFollow={onToggleFollow} />
     </div>
   );
 };
