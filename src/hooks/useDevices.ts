@@ -78,6 +78,7 @@ export const useDevices = () => {
         name: dev.name,
         imei: dev.imei,
         phoneNumber: dev.phone_number,
+        shareToken: (dev as any).share_token ?? null,
         lat: latest?.lat ?? 0,
         lng: latest?.lng ?? 0,
         battery: latest?.battery ?? 100,
