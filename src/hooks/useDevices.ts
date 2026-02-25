@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +42,7 @@ export const useDevices = () => {
   const { toast } = useToast();
   const [devices, setDevices] = useState<TrackedDevice[]>([]);
   const [loading, setLoading] = useState(true);
+  const prevStatusRef = useRef<Map<string, TrackedDevice["status"]>>(new Map());
 
   const fetchDevices = useCallback(async () => {
     if (!user) return;
@@ -93,6 +94,28 @@ export const useDevices = () => {
       });
     }
 
+    // Detect status changes and notify
+    const prevMap = prevStatusRef.current;
+    for (const device of trackedDevices) {
+      const prev = prevMap.get(device.id);
+      if (prev && prev !== device.status) {
+        if (device.status === "offline") {
+          toast({
+            title: `${device.name} went offline`,
+            description: `Last seen ${formatTimeAgo(device.lastSeen)}. Last position saved.`,
+            variant: "destructive",
+          });
+        } else if (device.status === "online" && prev === "offline") {
+          toast({
+            title: `${device.name} is back online!`,
+            description: "Live tracking resumed.",
+          });
+        }
+      }
+      prevMap.set(device.id, device.status);
+    }
+    prevStatusRef.current = prevMap;
+
     setDevices(trackedDevices);
     setLoading(false);
   }, [user, toast]);
@@ -117,6 +140,7 @@ export const useDevices = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      prevStatusRef.current.delete(id);
       await fetchDevices();
     }
   };
@@ -171,3 +195,12 @@ export const useDevices = () => {
 
   return { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken, refetch: fetchDevices };
 };
+
+function formatTimeAgo(date: Date): string {
+  const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}

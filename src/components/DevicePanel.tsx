@@ -141,6 +141,22 @@ const DevicePanel = ({
               <h3 className="text-xs font-mono-data uppercase tracking-widest text-primary text-glow">
                 Device Intel
               </h3>
+              {selectedDevice.status === "offline" && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/30">
+                  <span className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+                  <span className="text-xs text-destructive font-mono-data">
+                    OFFLINE — Last known position shown
+                  </span>
+                </div>
+              )}
+              {selectedDevice.status === "idle" && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/30">
+                  <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+                  <span className="text-xs text-warning font-mono-data">
+                    IDLE — No updates recently
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <InfoRow icon={<MapPin className="w-3 h-3" />} label="Lat" value={selectedDevice.lat.toFixed(4)} />
                 <InfoRow icon={<MapPin className="w-3 h-3" />} label="Lng" value={selectedDevice.lng.toFixed(4)} />
