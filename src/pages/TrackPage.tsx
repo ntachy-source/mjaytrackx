@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { MapPin, Loader2, CheckCircle, XCircle, Wifi, WifiOff } from "lucide-react";
+import { MapPin, Loader2, CheckCircle, XCircle, Wifi, WifiOff, Signal } from "lucide-react";
 
 const TrackPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -8,6 +8,8 @@ const TrackPage = () => {
   const [errorMsg, setErrorMsg] = useState("");
   const [sendCount, setSendCount] = useState(0);
   const [bgActive, setBgActive] = useState(false);
+  const [networkType, setNetworkType] = useState<string>("unknown");
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const watchIdRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const lastPositionRef = useRef<{ lat: number; lng: number; speed: number }>({ lat: 0, lng: 0, speed: 0 });
@@ -67,7 +69,6 @@ const TrackPage = () => {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "hidden" && status === "tracking") {
-        // Start fallback interval to resend last known position every 10s
         retryIntervalRef.current = setInterval(() => {
           const { lat, lng, speed } = lastPositionRef.current;
           if (lat !== 0 || lng !== 0) {
@@ -75,7 +76,6 @@ const TrackPage = () => {
           }
         }, 10000);
       } else {
-        // Clear fallback when page is visible again
         if (retryIntervalRef.current) {
           clearInterval(retryIntervalRef.current);
           retryIntervalRef.current = null;
@@ -86,6 +86,47 @@ const TrackPage = () => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
       if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
+    };
+  }, [status, sendLocation]);
+
+  // Monitor network type and resend on reconnect (WiFi → mobile data fallback)
+  useEffect(() => {
+    const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+
+    const updateNetworkType = () => {
+      if (conn) {
+        setNetworkType(conn.effectiveType || conn.type || "unknown");
+      } else {
+        setNetworkType(navigator.onLine ? "online" : "offline");
+      }
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      updateNetworkType();
+      // Immediately resend last known position when connection is restored
+      if (status === "tracking") {
+        const { lat, lng, speed } = lastPositionRef.current;
+        if (lat !== 0 || lng !== 0) {
+          sendLocation(lat, lng, speed);
+        }
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setNetworkType("offline");
+    };
+
+    updateNetworkType();
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    if (conn) conn.addEventListener("change", updateNetworkType);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      if (conn) conn.removeEventListener("change", updateNetworkType);
     };
   }, [status, sendLocation]);
 
@@ -177,10 +218,30 @@ const TrackPage = () => {
                   </>
                 )}
               </div>
+              <div className="flex items-center gap-1.5">
+                {isOnline ? (
+                  <>
+                    <Signal className="w-4 h-4 text-primary" />
+                    <span>{networkType === "4g" ? "4G" : networkType === "3g" ? "3G" : networkType === "2g" ? "2G" : "Connected"}</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-4 h-4 text-destructive" />
+                    <span>No connection</span>
+                  </>
+                )}
+              </div>
             </div>
+            {!isOnline && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <p className="text-xs text-destructive">
+                  ⚠️ You're offline. Location will resume sending automatically when WiFi or mobile data reconnects.
+                </p>
+              </div>
+            )}
             <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
               <p className="text-xs text-muted-foreground">
-                💡 <strong>Tip:</strong> Don't close this tab. Your location will continue to be shared even if you switch apps or lock your screen.
+                💡 <strong>Tip:</strong> Don't close this tab. If WiFi drops, your phone's mobile data will be used automatically.
               </p>
             </div>
           </>
