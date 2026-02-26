@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export interface DeviceRow {
   id: string;
@@ -40,6 +41,7 @@ export interface TrackedDevice {
 export const useDevices = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { requestPermission, notify } = usePushNotifications();
   const [devices, setDevices] = useState<TrackedDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const prevStatusRef = useRef<Map<string, TrackedDevice["status"]>>(new Map());
@@ -100,16 +102,12 @@ export const useDevices = () => {
       const prev = prevMap.get(device.id);
       if (prev && prev !== device.status) {
         if (device.status === "offline") {
-          toast({
-            title: `${device.name} went offline`,
-            description: `Last seen ${formatTimeAgo(device.lastSeen)}. Last position saved.`,
-            variant: "destructive",
-          });
+          const desc = `Last seen ${formatTimeAgo(device.lastSeen)}. Last position saved.`;
+          toast({ title: `${device.name} went offline`, description: desc, variant: "destructive" });
+          notify(`${device.name} went offline`, { body: desc, tag: `offline-${device.id}` });
         } else if (device.status === "online" && prev === "offline") {
-          toast({
-            title: `${device.name} is back online!`,
-            description: "Live tracking resumed.",
-          });
+          toast({ title: `${device.name} is back online!`, description: "Live tracking resumed." });
+          notify(`${device.name} is back online!`, { body: "Live tracking resumed.", tag: `online-${device.id}` });
         }
       }
       prevMap.set(device.id, device.status);
@@ -176,6 +174,7 @@ export const useDevices = () => {
   useEffect(() => {
     if (!user) return;
     fetchDevices();
+    requestPermission();
 
     const channel = supabase
       .channel("locations-realtime")
@@ -191,7 +190,7 @@ export const useDevices = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchDevices]);
+  }, [user, fetchDevices, requestPermission]);
 
   return { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken, refetch: fetchDevices };
 };
