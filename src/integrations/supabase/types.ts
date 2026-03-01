@@ -44,6 +44,50 @@ export type Database = {
         }
         Relationships: []
       }
+      geofences: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          is_active: boolean
+          lat: number
+          lng: number
+          name: string
+          radius_meters: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          is_active?: boolean
+          lat: number
+          lng: number
+          name: string
+          radius_meters?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          name?: string
+          radius_meters?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geofences_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           battery: number | null
