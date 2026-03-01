@@ -4,6 +4,7 @@ import DevicePanel from "@/components/DevicePanel";
 import StatusBar from "@/components/StatusBar";
 import MobileBottomSheet from "@/components/MobileBottomSheet";
 import { useDevices, TrackedDevice } from "@/hooks/useDevices";
+import { useGeofences } from "@/hooks/useGeofences";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { PanelLeftOpen, PanelLeftClose } from "lucide-react";
@@ -12,6 +13,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
   const { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken } = useDevices();
+  const { geofences, addGeofence, deleteGeofence } = useGeofences(devices);
   const [selectedDevice, setSelectedDevice] = useState<TrackedDevice | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
   const [followingDevice, setFollowingDevice] = useState(false);
@@ -49,6 +51,9 @@ const Index = () => {
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
       onGenerateShareToken={generateShareToken}
+      geofences={geofences}
+      onAddGeofence={addGeofence}
+      onDeleteGeofence={deleteGeofence}
       following={followingDevice}
       onToggleFollow={() => setFollowingDevice((f) => !f)}
       loading={loading}
@@ -64,6 +69,7 @@ const Index = () => {
           selectedDevice={syncedSelected}
           onSelectDevice={handleSelectDevice}
           followDevice={followingDevice}
+          geofences={geofences}
         />
       </div>
 

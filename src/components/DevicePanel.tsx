@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
+import { Geofence } from "@/hooks/useGeofences";
 import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, Copy, CheckCircle } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
+import AddGeofenceDialog from "./AddGeofenceDialog";
+import GeofenceList from "./GeofenceList";
 import TrackingControls from "./TrackingControls";
 
 interface DevicePanelProps {
@@ -12,6 +15,9 @@ interface DevicePanelProps {
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
   onGenerateShareToken: (deviceId: string) => Promise<string | null>;
+  geofences: Geofence[];
+  onAddGeofence: (deviceId: string, name: string, lat: number, lng: number, radius: number) => Promise<void>;
+  onDeleteGeofence: (id: string) => Promise<void>;
   following: boolean;
   onToggleFollow: () => void;
   loading: boolean;
@@ -34,6 +40,9 @@ const DevicePanel = ({
   onAddDevice,
   onDeleteDevice,
   onGenerateShareToken,
+  geofences,
+  onAddGeofence,
+  onDeleteGeofence,
   following,
   onToggleFollow,
   loading,
@@ -123,9 +132,11 @@ const DevicePanel = ({
             ))}
           </AnimatePresence>
         )}
-        <div className="pt-2">
+        <div className="pt-2 space-y-2">
           <AddDeviceDialog onAdd={onAddDevice} />
+          <AddGeofenceDialog devices={devices} onAdd={onAddGeofence} />
         </div>
+        <GeofenceList geofences={geofences} devices={devices} onDelete={onDeleteGeofence} />
       </div>
 
       {/* Device detail */}

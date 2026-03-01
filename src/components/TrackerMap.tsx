@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { TrackedDevice } from "@/hooks/useDevices";
+import { Geofence } from "@/hooks/useGeofences";
 import { Locate } from "lucide-react";
 
 interface TrackerMapProps {
@@ -8,6 +9,7 @@ interface TrackerMapProps {
   selectedDevice: TrackedDevice | null;
   onSelectDevice: (device: TrackedDevice) => void;
   followDevice?: boolean;
+  geofences?: Geofence[];
 }
 
 const createPulseIcon = (status: TrackedDevice["status"]) => {
@@ -37,11 +39,12 @@ const myLocationIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice }: TrackerMapProps) => {
+const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice, geofences }: TrackerMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
   const myLocMarkerRef = useRef<L.Marker | null>(null);
+  const geofenceCirclesRef = useRef<L.Circle[]>([]);
   const hasFittedRef = useRef(false);
 
   useEffect(() => {
@@ -111,6 +114,31 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice }: T
       }
     }
   }, [selectedDevice, followDevice]);
+
+  // Draw geofence circles
+  useEffect(() => {
+    if (!mapRef.current) return;
+    geofenceCirclesRef.current.forEach((c) => c.remove());
+    geofenceCirclesRef.current = [];
+
+    (geofences || []).forEach((fence) => {
+      if (!fence.is_active) return;
+      const circle = L.circle([fence.lat, fence.lng], {
+        radius: fence.radius_meters,
+        color: "#00e676",
+        fillColor: "#00e676",
+        fillOpacity: 0.08,
+        weight: 1.5,
+        dashArray: "6 4",
+      })
+        .addTo(mapRef.current!)
+        .bindTooltip(fence.name, {
+          className: "!bg-card !text-card-foreground !border-border !font-mono-data !text-xs",
+          direction: "top",
+        });
+      geofenceCirclesRef.current.push(circle);
+    });
+  }, [geofences]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation || !mapRef.current) return;
