@@ -26,10 +26,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Look up device by share_token
+    // Look up device by share_token, include lock status
     const { data: device, error: devErr } = await supabase
       .from("devices")
-      .select("id")
+      .select("id, is_locked, lock_message, play_alarm")
       .eq("share_token", token)
       .maybeSingle();
 
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Insert location
+    // Insert location even if locked (so admin can still see position)
     const { error: locErr } = await supabase.from("locations").insert({
       device_id: device.id,
       lat,
@@ -57,7 +57,12 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ ok: true }),
+      JSON.stringify({
+        ok: true,
+        is_locked: device.is_locked,
+        lock_message: device.lock_message,
+        play_alarm: device.play_alarm,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
