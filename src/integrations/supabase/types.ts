@@ -19,8 +19,11 @@ export type Database = {
           created_at: string
           id: string
           imei: string | null
+          is_locked: boolean
+          lock_message: string | null
           name: string
           phone_number: string | null
+          play_alarm: boolean
           share_token: string | null
           user_id: string
         }
@@ -28,8 +31,11 @@ export type Database = {
           created_at?: string
           id?: string
           imei?: string | null
+          is_locked?: boolean
+          lock_message?: string | null
           name: string
           phone_number?: string | null
+          play_alarm?: boolean
           share_token?: string | null
           user_id: string
         }
@@ -37,8 +43,11 @@ export type Database = {
           created_at?: string
           id?: string
           imei?: string | null
+          is_locked?: boolean
+          lock_message?: string | null
           name?: string
           phone_number?: string | null
+          play_alarm?: boolean
           share_token?: string | null
           user_id?: string
         }
