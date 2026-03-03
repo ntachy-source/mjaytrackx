@@ -78,6 +78,9 @@ export const useAdminDevices = () => {
         })),
         userId: dev.user_id,
         ownerEmail: profileMap.get(dev.user_id) || dev.user_id,
+        isLocked: (dev as any).is_locked ?? false,
+        lockMessage: (dev as any).lock_message ?? "",
+        playAlarm: (dev as any).play_alarm ?? false,
       });
     }
 
