@@ -7,6 +7,9 @@ import type { TrackedDevice, DeviceRow, LocationRow } from "@/hooks/useDevices";
 export interface AdminDevice extends TrackedDevice {
   ownerEmail?: string;
   userId: string;
+  isLocked: boolean;
+  lockMessage: string;
+  playAlarm: boolean;
 }
 
 export const useAdminDevices = () => {

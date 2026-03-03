@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { MapPin, Loader2, CheckCircle, XCircle, Wifi, WifiOff, Signal, Download, Shield } from "lucide-react";
+import { MapPin, Loader2, CheckCircle, XCircle, Wifi, WifiOff, Signal, Download, Shield, Lock, Volume2 } from "lucide-react";
 
 const TrackPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -12,12 +12,64 @@ const TrackPage = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showInstall, setShowInstall] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockMessage, setLockMessage] = useState("");
+  const [playAlarm, setPlayAlarm] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const lastPositionRef = useRef<{ lat: number; lng: number; speed: number }>({ lat: 0, lng: 0, speed: 0 });
   const retryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const alarmRef = useRef<AudioContext | null>(null);
+  const alarmOscRef = useRef<OscillatorNode | null>(null);
 
   const FUNCTION_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/track-location`;
+
+  // Alarm sound using Web Audio API
+  const startAlarm = useCallback(() => {
+    if (alarmRef.current) return;
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = 880;
+      gain.gain.value = 0.3;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      // Siren effect
+      const now = ctx.currentTime;
+      for (let i = 0; i < 100; i++) {
+        osc.frequency.setValueAtTime(880, now + i * 0.5);
+        osc.frequency.linearRampToValueAtTime(1200, now + i * 0.5 + 0.25);
+        osc.frequency.linearRampToValueAtTime(880, now + i * 0.5 + 0.5);
+      }
+      osc.start();
+      alarmRef.current = ctx;
+      alarmOscRef.current = osc;
+    } catch {}
+  }, []);
+
+  const stopAlarm = useCallback(() => {
+    if (alarmOscRef.current) {
+      try { alarmOscRef.current.stop(); } catch {}
+      alarmOscRef.current = null;
+    }
+    if (alarmRef.current) {
+      try { alarmRef.current.close(); } catch {}
+      alarmRef.current = null;
+    }
+  }, []);
+
+  // Handle lock state changes
+  useEffect(() => {
+    if (isLocked && playAlarm) {
+      startAlarm();
+    } else {
+      stopAlarm();
+    }
+    return () => stopAlarm();
+  }, [isLocked, playAlarm, startAlarm, stopAlarm]);
 
   // Capture install prompt
   useEffect(() => {
@@ -46,9 +98,19 @@ const TrackPage = () => {
         body: JSON.stringify({ token, lat, lng, speed: speed ?? 0 }),
       });
       if (res.ok) {
+        const data = await res.json();
         setSendCount((c) => c + 1);
         setStatus("tracking");
         lastPositionRef.current = { lat, lng, speed: speed ?? 0 };
+        // Check lock status from response
+        if (data.is_locked) {
+          setIsLocked(true);
+          setLockMessage(data.lock_message || "This device has been locked.");
+          setPlayAlarm(!!data.play_alarm);
+        } else {
+          setIsLocked(false);
+          setPlayAlarm(false);
+        }
       } else {
         const data = await res.json();
         setErrorMsg(data.error || "Failed to send location");
@@ -138,6 +200,48 @@ const TrackPage = () => {
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+  // Lock screen overlay - full screen, undismissable
+  if (isLocked) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-destructive flex flex-col items-center justify-center p-6 select-none"
+        style={{ touchAction: "none" }}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <div className="max-w-sm w-full text-center space-y-6">
+          <div className="relative mx-auto w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-destructive-foreground/20 animate-ping" />
+            <div className="absolute inset-4 rounded-full bg-destructive-foreground/30 animate-pulse" />
+            <div className="absolute inset-6 rounded-full bg-destructive-foreground flex items-center justify-center">
+              <Lock className="w-8 h-8 text-destructive" />
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-destructive-foreground tracking-tight">
+            DEVICE LOCKED
+          </h1>
+
+          <p className="text-lg text-destructive-foreground/90">
+            {lockMessage}
+          </p>
+
+          {playAlarm && (
+            <div className="flex items-center justify-center gap-2 text-destructive-foreground/80">
+              <Volume2 className="w-5 h-5 animate-pulse" />
+              <span className="text-sm font-mono uppercase tracking-widest">Alarm Active</span>
+            </div>
+          )}
+
+          <div className="pt-8">
+            <Shield className="w-6 h-6 text-destructive-foreground/50 mx-auto" />
+            <p className="text-xs text-destructive-foreground/50 mt-2">
+              Protected by TrackX
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="max-w-sm w-full text-center space-y-6">
@@ -201,7 +305,6 @@ const TrackPage = () => {
               </div>
             )}
 
-            {/* Install prompt */}
             {showInstall && (
               <button
                 onClick={handleInstall}
@@ -212,7 +315,6 @@ const TrackPage = () => {
               </button>
             )}
 
-            {/* iOS install hint */}
             {isIOS && !window.matchMedia("(display-mode: standalone)").matches && !showInstall && (
               <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground">
