@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_logs: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: string | null
+          id: string
+          target_device_id: string | null
+          target_device_name: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_device_id?: string | null
+          target_device_name?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          target_device_id?: string | null
+          target_device_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_activity_logs_target_device_id_fkey"
+            columns: ["target_device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           created_at: string
