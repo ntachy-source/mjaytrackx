@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Smartphone, Battery, MapPin, Clock, Zap, Hash, Phone, Shield,
   Wifi, WifiOff, ChevronRight, LogOut, Lock, Unlock, Volume2, Activity,
+  BarChart3, History, MessageSquare,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,19 +19,16 @@ import AdminStatsBar from "@/components/admin/AdminStatsBar";
 import DeviceSearchFilter, { type StatusFilter } from "@/components/admin/DeviceSearchFilter";
 import BulkActionBar from "@/components/admin/BulkActionBar";
 import AdminActivityLog from "@/components/admin/AdminActivityLog";
+import DeviceAnalytics from "@/components/admin/DeviceAnalytics";
+import HistoryPlayback from "@/components/admin/HistoryPlayback";
+import { useAdminGeofenceAlerts } from "@/components/admin/AdminGeofenceAlerts";
+import AdminDeviceDetail from "@/components/admin/AdminDeviceDetail";
 
 const statusColor = (s: TrackedDevice["status"]) =>
   s === "online" ? "bg-green-500" : s === "idle" ? "bg-yellow-500" : "bg-red-500";
 
 const statusText = (s: TrackedDevice["status"]) =>
   s === "online" ? "text-green-400" : s === "idle" ? "text-yellow-400" : "text-red-400";
-
-const formatTime = (d: Date) => {
-  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  return `${Math.floor(mins / 60)}h ago`;
-};
 
 const Admin = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -42,7 +40,12 @@ const Admin = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [showLog, setShowLog] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showPlayback, setShowPlayback] = useState(false);
   const { toast } = useToast();
+
+  // Geofence breach alerts for admin
+  useAdminGeofenceAlerts(devices);
 
   const filteredDevices = useMemo(() => {
     let filtered = devices;
@@ -67,6 +70,7 @@ const Admin = () => {
 
   const handleSelectDevice = useCallback((device: TrackedDevice) => {
     setSelectedDevice((prev) => (prev?.id === device.id ? null : device));
+    setShowPlayback(false);
   }, []);
 
   const toggleBulkSelect = useCallback((id: string) => {
@@ -122,6 +126,24 @@ const Admin = () => {
       } else {
         toast({ title: alarm ? "Alarm Enabled" : "Alarm Disabled" });
         await logAction(alarm ? "alarm_on" : "alarm_off", device);
+        refetch();
+      }
+    },
+    [toast, refetch, logAction]
+  );
+
+  const handleUpdateLockMessage = useCallback(
+    async (device: AdminDevice, message: string) => {
+      const { error } = await supabase
+        .from("devices")
+        .update({ lock_message: message })
+        .eq("id", device.id);
+
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Lock message updated" });
+        await logAction("lock_message_update", device, message);
         refetch();
       }
     },
@@ -191,10 +213,17 @@ const Admin = () => {
               <span className="text-xs text-muted-foreground ml-2 font-mono-data">ADMIN</span>
             </span>
           </div>
-          <div className="flex items-center gap-3 text-xs font-mono-data">
+          <div className="flex items-center gap-1 text-xs font-mono-data">
             <button
-              onClick={() => setShowLog(!showLog)}
-              className={`p-1.5 transition-colors ${showLog ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => { setShowAnalytics(!showAnalytics); setShowLog(false); }}
+              className={`p-1.5 transition-colors rounded ${showAnalytics ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
+              title="Analytics"
+            >
+              <BarChart3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { setShowLog(!showLog); setShowAnalytics(false); }}
+              className={`p-1.5 transition-colors rounded ${showLog ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"}`}
               title="Activity Log"
             >
               <Activity className="w-4 h-4" />
@@ -299,68 +328,37 @@ const Admin = () => {
 
         {/* Device detail */}
         <AnimatePresence>
-          {syncedSelected && (() => {
-            const adminDev = syncedSelected as AdminDevice;
-            return (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="border-t border-border overflow-hidden"
-              >
-                <div className="p-4 space-y-3">
-                  <h3 className="text-xs font-mono-data uppercase tracking-widest text-primary text-glow">
-                    Device Intel
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <InfoRow icon={<MapPin className="w-3 h-3" />} label="Lat" value={syncedSelected.lat.toFixed(4)} />
-                    <InfoRow icon={<MapPin className="w-3 h-3" />} label="Lng" value={syncedSelected.lng.toFixed(4)} />
-                    <InfoRow icon={<Zap className="w-3 h-3" />} label="Speed" value={`${syncedSelected.speed} km/h`} />
-                    <InfoRow icon={<Battery className="w-3 h-3" />} label="Battery" value={`${syncedSelected.battery}%`} />
-                    <InfoRow icon={<Clock className="w-3 h-3" />} label="Seen" value={formatTime(syncedSelected.lastSeen)} />
-                    {syncedSelected.imei && (
-                      <InfoRow icon={<Hash className="w-3 h-3" />} label="IMEI" value={syncedSelected.imei} />
-                    )}
-                    {syncedSelected.phoneNumber && (
-                      <InfoRow icon={<Phone className="w-3 h-3" />} label="Phone" value={syncedSelected.phoneNumber} />
-                    )}
-                  </div>
-
-                  {/* Lock controls */}
-                  <div className="mt-3 p-3 rounded-lg bg-muted/50 border border-border space-y-3">
-                    <h4 className="text-xs font-mono-data uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                      <Lock className="w-3 h-3" /> Remote Lock
-                    </h4>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-foreground flex items-center gap-1.5">
-                        {adminDev.isLocked ? <Lock className="w-3.5 h-3.5 text-destructive" /> : <Unlock className="w-3.5 h-3.5 text-muted-foreground" />}
-                        {adminDev.isLocked ? "Locked" : "Unlocked"}
-                      </span>
-                      <Switch
-                        checked={adminDev.isLocked}
-                        onCheckedChange={(checked) => handleToggleLock(adminDev, checked)}
-                        disabled={locking}
-                      />
-                    </div>
-                    {adminDev.isLocked && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-foreground flex items-center gap-1.5">
-                          <Volume2 className="w-3.5 h-3.5 text-muted-foreground" />
-                          Alarm Sound
-                        </span>
-                        <Switch
-                          checked={adminDev.playAlarm}
-                          onCheckedChange={(checked) => handleToggleAlarm(adminDev, checked)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })()}
+          {syncedSelected && (
+            <AdminDeviceDetail
+              device={syncedSelected as AdminDevice}
+              locking={locking}
+              onToggleLock={handleToggleLock}
+              onToggleAlarm={handleToggleAlarm}
+              onUpdateLockMessage={handleUpdateLockMessage}
+              onPlayHistory={() => setShowPlayback(true)}
+            />
+          )}
         </AnimatePresence>
       </div>
+
+      {/* History Playback */}
+      <AnimatePresence>
+        {showPlayback && syncedSelected && syncedSelected.history.length > 1 && (
+          <HistoryPlayback
+            history={syncedSelected.history}
+            deviceName={syncedSelected.name}
+            onPositionChange={() => {}}
+            onClose={() => setShowPlayback(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Analytics Panel */}
+      <AnimatePresence>
+        {showAnalytics && (
+          <DeviceAnalytics devices={devices} isOpen={showAnalytics} onClose={() => setShowAnalytics(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Activity Log Panel */}
       <AnimatePresence>
@@ -369,13 +367,5 @@ const Admin = () => {
     </div>
   );
 };
-
-const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="flex items-center gap-2 bg-muted rounded p-2">
-    <span className="text-primary">{icon}</span>
-    <span className="text-muted-foreground">{label}</span>
-    <span className="ml-auto font-mono-data text-foreground truncate">{value}</span>
-  </div>
-);
 
 export default Admin;
