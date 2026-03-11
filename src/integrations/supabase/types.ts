@@ -200,6 +200,41 @@ export type Database = {
         }
         Relationships: []
       }
+      sos_alerts: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          lat: number
+          lng: number
+          message: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          lat: number
+          lng: number
+          message?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_alerts_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
