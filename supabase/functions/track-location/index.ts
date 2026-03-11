@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { token, lat, lng, speed, battery } = await req.json();
+    const { token, lat, lng, speed, battery, sos, sos_message } = await req.json();
 
     if (!token || lat == null || lng == null) {
       return new Response(
@@ -54,6 +54,16 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: locErr.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Handle SOS alert
+    if (sos) {
+      await supabase.from("sos_alerts").insert({
+        device_id: device.id,
+        lat,
+        lng,
+        message: sos_message || "Emergency SOS triggered!",
+      });
     }
 
     return new Response(
