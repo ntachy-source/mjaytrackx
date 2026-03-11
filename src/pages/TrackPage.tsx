@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { MapPin, Loader2, CheckCircle, XCircle, Wifi, WifiOff, Signal, Download, Shield, Lock, Volume2 } from "lucide-react";
+import BatteryInfo from "@/components/tracking/BatteryInfo";
+import SOSButton from "@/components/tracking/SOSButton";
+import LocationAccuracy from "@/components/tracking/LocationAccuracy";
+import ThemeToggle from "@/components/tracking/ThemeToggle";
 
 const TrackPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -15,6 +19,18 @@ const TrackPage = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockMessage, setLockMessage] = useState("");
   const [playAlarm, setPlayAlarm] = useState(false);
+
+  // New state for client features
+  const [battery, setBattery] = useState<number | null>(null);
+  const [isCharging, setIsCharging] = useState(false);
+  const [deviceModel] = useState(() => getDeviceModel());
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [altitude, setAltitude] = useState<number | null>(null);
+  const [heading, setHeading] = useState<number | null>(null);
+  const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [currentLat, setCurrentLat] = useState(0);
+  const [currentLng, setCurrentLng] = useState(0);
+
   const watchIdRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const lastPositionRef = useRef<{ lat: number; lng: number; speed: number }>({ lat: 0, lng: 0, speed: 0 });
@@ -24,7 +40,24 @@ const TrackPage = () => {
 
   const FUNCTION_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/track-location`;
 
-  // Alarm sound using Web Audio API
+  // Battery API
+  useEffect(() => {
+    const getBattery = async () => {
+      try {
+        const nav = navigator as any;
+        if (nav.getBattery) {
+          const batt = await nav.getBattery();
+          setBattery(Math.round(batt.level * 100));
+          setIsCharging(batt.charging);
+          batt.addEventListener("levelchange", () => setBattery(Math.round(batt.level * 100)));
+          batt.addEventListener("chargingchange", () => setIsCharging(batt.charging));
+        }
+      } catch {}
+    };
+    getBattery();
+  }, []);
+
+  // Alarm sound
   const startAlarm = useCallback(() => {
     if (alarmRef.current) return;
     try {
@@ -36,8 +69,6 @@ const TrackPage = () => {
       gain.gain.value = 0.3;
       osc.connect(gain);
       gain.connect(ctx.destination);
-
-      // Siren effect
       const now = ctx.currentTime;
       for (let i = 0; i < 100; i++) {
         osc.frequency.setValueAtTime(880, now + i * 0.5);
@@ -51,33 +82,19 @@ const TrackPage = () => {
   }, []);
 
   const stopAlarm = useCallback(() => {
-    if (alarmOscRef.current) {
-      try { alarmOscRef.current.stop(); } catch {}
-      alarmOscRef.current = null;
-    }
-    if (alarmRef.current) {
-      try { alarmRef.current.close(); } catch {}
-      alarmRef.current = null;
-    }
+    if (alarmOscRef.current) { try { alarmOscRef.current.stop(); } catch {} alarmOscRef.current = null; }
+    if (alarmRef.current) { try { alarmRef.current.close(); } catch {} alarmRef.current = null; }
   }, []);
 
-  // Handle lock state changes
   useEffect(() => {
-    if (isLocked && playAlarm) {
-      startAlarm();
-    } else {
-      stopAlarm();
-    }
+    if (isLocked && playAlarm) startAlarm();
+    else stopAlarm();
     return () => stopAlarm();
   }, [isLocked, playAlarm, startAlarm, stopAlarm]);
 
-  // Capture install prompt
+  // Install prompt
   useEffect(() => {
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstall(true);
-    };
+    const handler = (e: Event) => { e.preventDefault(); setDeferredPrompt(e); setShowInstall(true); };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
@@ -90,19 +107,18 @@ const TrackPage = () => {
     setShowInstall(false);
   };
 
-  const sendLocation = useCallback(async (lat: number, lng: number, speed?: number) => {
+  const sendLocation = useCallback(async (lat: number, lng: number, speed?: number, extraBattery?: number) => {
     try {
       const res = await fetch(FUNCTION_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, lat, lng, speed: speed ?? 0 }),
+        body: JSON.stringify({ token, lat, lng, speed: speed ?? 0, battery: extraBattery ?? battery }),
       });
       if (res.ok) {
         const data = await res.json();
         setSendCount((c) => c + 1);
         setStatus("tracking");
         lastPositionRef.current = { lat, lng, speed: speed ?? 0 };
-        // Check lock status from response
         if (data.is_locked) {
           setIsLocked(true);
           setLockMessage(data.lock_message || "This device has been locked.");
@@ -119,7 +135,18 @@ const TrackPage = () => {
     } catch {
       console.warn("Network error sending location, will retry...");
     }
-  }, [token, FUNCTION_URL]);
+  }, [token, FUNCTION_URL, battery]);
+
+  const sendSOS = useCallback(async (message: string) => {
+    const { lat, lng, speed } = lastPositionRef.current;
+    try {
+      await fetch(FUNCTION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, lat, lng, speed, battery, sos: true, sos_message: message }),
+      });
+    } catch {}
+  }, [token, FUNCTION_URL, battery]);
 
   const requestWakeLock = useCallback(async () => {
     try {
@@ -132,15 +159,13 @@ const TrackPage = () => {
   }, []);
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && status === "tracking") requestWakeLock();
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    const handler = () => { if (document.visibilityState === "visible" && status === "tracking") requestWakeLock(); };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
   }, [status, requestWakeLock]);
 
   useEffect(() => {
-    const handleVisibility = () => {
+    const handler = () => {
       if (document.visibilityState === "hidden" && status === "tracking") {
         retryIntervalRef.current = setInterval(() => {
           const { lat, lng, speed } = lastPositionRef.current;
@@ -150,37 +175,20 @@ const TrackPage = () => {
         if (retryIntervalRef.current) { clearInterval(retryIntervalRef.current); retryIntervalRef.current = null; }
       }
     };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
-    };
+    document.addEventListener("visibilitychange", handler);
+    return () => { document.removeEventListener("visibilitychange", handler); if (retryIntervalRef.current) clearInterval(retryIntervalRef.current); };
   }, [status, sendLocation]);
 
   useEffect(() => {
     const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    const updateNetworkType = () => {
-      if (conn) setNetworkType(conn.effectiveType || conn.type || "unknown");
-      else setNetworkType(navigator.onLine ? "online" : "offline");
-    };
-    const handleOnline = () => {
-      setIsOnline(true);
-      updateNetworkType();
-      if (status === "tracking") {
-        const { lat, lng, speed } = lastPositionRef.current;
-        if (lat !== 0 || lng !== 0) sendLocation(lat, lng, speed);
-      }
-    };
+    const updateNet = () => { if (conn) setNetworkType(conn.effectiveType || conn.type || "unknown"); else setNetworkType(navigator.onLine ? "online" : "offline"); };
+    const handleOnline = () => { setIsOnline(true); updateNet(); if (status === "tracking") { const { lat, lng, speed } = lastPositionRef.current; if (lat !== 0 || lng !== 0) sendLocation(lat, lng, speed); } };
     const handleOffline = () => { setIsOnline(false); setNetworkType("offline"); };
-    updateNetworkType();
+    updateNet();
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    if (conn) conn.addEventListener("change", updateNetworkType);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-      if (conn) conn.removeEventListener("change", updateNetworkType);
-    };
+    if (conn) conn.addEventListener("change", updateNet);
+    return () => { window.removeEventListener("online", handleOnline); window.removeEventListener("offline", handleOffline); if (conn) conn.removeEventListener("change", updateNet); };
   }, [status, sendLocation]);
 
   useEffect(() => {
@@ -188,7 +196,16 @@ const TrackPage = () => {
     if (!navigator.geolocation) { setErrorMsg("Geolocation is not supported by your browser"); setStatus("error"); return; }
     requestWakeLock();
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => sendLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.speed ? pos.coords.speed * 3.6 : 0),
+      (pos) => {
+        const spd = pos.coords.speed ? pos.coords.speed * 3.6 : 0;
+        setAccuracy(pos.coords.accuracy);
+        setAltitude(pos.coords.altitude);
+        setHeading(pos.coords.heading);
+        setCurrentSpeed(spd);
+        setCurrentLat(pos.coords.latitude);
+        setCurrentLng(pos.coords.longitude);
+        sendLocation(pos.coords.latitude, pos.coords.longitude, spd);
+      },
       (err) => { setErrorMsg(err.message); setStatus("error"); },
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
     );
@@ -200,7 +217,7 @@ const TrackPage = () => {
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  // Lock screen overlay - full screen, undismissable
+  // Lock screen overlay
   if (isLocked) {
     return (
       <div className="fixed inset-0 z-[9999] bg-destructive flex flex-col items-center justify-center p-6 select-none"
@@ -215,27 +232,17 @@ const TrackPage = () => {
               <Lock className="w-8 h-8 text-destructive" />
             </div>
           </div>
-
-          <h1 className="text-3xl font-bold text-destructive-foreground tracking-tight">
-            DEVICE LOCKED
-          </h1>
-
-          <p className="text-lg text-destructive-foreground/90">
-            {lockMessage}
-          </p>
-
+          <h1 className="text-3xl font-bold text-destructive-foreground tracking-tight">DEVICE LOCKED</h1>
+          <p className="text-lg text-destructive-foreground/90">{lockMessage}</p>
           {playAlarm && (
             <div className="flex items-center justify-center gap-2 text-destructive-foreground/80">
               <Volume2 className="w-5 h-5 animate-pulse" />
               <span className="text-sm font-mono uppercase tracking-widest">Alarm Active</span>
             </div>
           )}
-
           <div className="pt-8">
             <Shield className="w-6 h-6 text-destructive-foreground/50 mx-auto" />
-            <p className="text-xs text-destructive-foreground/50 mt-2">
-              Protected by TrackX
-            </p>
+            <p className="text-xs text-destructive-foreground/50 mt-2">Protected by TrackX</p>
           </div>
         </div>
       </div>
@@ -244,20 +251,21 @@ const TrackPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-      <div className="max-w-sm w-full text-center space-y-6">
-        {/* App header */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Shield className="w-5 h-5 text-primary" />
-          <span className="text-sm font-bold text-primary tracking-wider">TRACK X</span>
+      <div className="max-w-sm w-full text-center space-y-4">
+        {/* Header with theme toggle */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="text-sm font-bold text-primary tracking-wider">TRACK X</span>
+          </div>
+          <ThemeToggle />
         </div>
 
         {status === "requesting" && (
           <>
             <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
             <h1 className="text-xl font-semibold text-foreground">Requesting Location Access</h1>
-            <p className="text-sm text-muted-foreground">
-              Please allow location access so your position can be shared.
-            </p>
+            <p className="text-sm text-muted-foreground">Please allow location access so your position can be shared.</p>
             <p className="text-xs text-muted-foreground">Keep this page open for continuous tracking.</p>
           </>
         )}
@@ -272,9 +280,7 @@ const TrackPage = () => {
               </div>
             </div>
             <h1 className="text-xl font-semibold text-foreground">Location Sharing Active</h1>
-            <p className="text-sm text-muted-foreground">
-              Your GPS position is being shared live. Keep this page open.
-            </p>
+            <p className="text-sm text-muted-foreground">Your GPS position is being shared live.</p>
 
             {/* Stats grid */}
             <div className="grid grid-cols-3 gap-2 text-xs">
@@ -297,19 +303,30 @@ const TrackPage = () => {
               </div>
             </div>
 
+            {/* Battery & Device Info */}
+            <BatteryInfo battery={battery} isCharging={isCharging} deviceModel={deviceModel} />
+
+            {/* Location Accuracy & Coordinates */}
+            <LocationAccuracy
+              accuracy={accuracy}
+              altitude={altitude}
+              heading={heading}
+              lat={currentLat}
+              lng={currentLng}
+              speed={currentSpeed}
+            />
+
+            {/* SOS Button */}
+            <SOSButton onSOS={sendSOS} />
+
             {!isOnline && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
-                <p className="text-xs text-destructive">
-                  ⚠️ You're offline. Location will resume automatically when connectivity returns.
-                </p>
+                <p className="text-xs text-destructive">⚠️ You're offline. Location will resume when connectivity returns.</p>
               </div>
             )}
 
             {showInstall && (
-              <button
-                onClick={handleInstall}
-                className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-              >
+              <button onClick={handleInstall} className="w-full py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
                 <Download className="w-4 h-4" />
                 Install App for Better Tracking
               </button>
@@ -317,16 +334,12 @@ const TrackPage = () => {
 
             {isIOS && !window.matchMedia("(display-mode: standalone)").matches && !showInstall && (
               <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <p className="text-xs text-muted-foreground">
-                  📱 For best performance, tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to install this app.
-                </p>
+                <p className="text-xs text-muted-foreground">📱 For best performance, tap <strong>Share</strong> → <strong>Add to Home Screen</strong>.</p>
               </div>
             )}
 
             <div className="p-3 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs text-muted-foreground">
-                💡 <strong>Tip:</strong> Don't close this tab. If WiFi drops, your phone's mobile data will be used automatically.
-              </p>
+              <p className="text-xs text-muted-foreground">💡 <strong>Tip:</strong> Don't close this tab. If WiFi drops, mobile data will be used automatically.</p>
             </div>
           </>
         )}
@@ -336,10 +349,7 @@ const TrackPage = () => {
             <XCircle className="w-12 h-12 text-destructive mx-auto" />
             <h1 className="text-xl font-semibold text-foreground">Error</h1>
             <p className="text-sm text-muted-foreground">{errorMsg}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90 transition-opacity"
-            >
+            <button onClick={() => window.location.reload()} className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90 transition-opacity">
               Try Again
             </button>
           </>
@@ -348,5 +358,22 @@ const TrackPage = () => {
     </div>
   );
 };
+
+function getDeviceModel(): string {
+  const ua = navigator.userAgent;
+  if (/iPhone/.test(ua)) return "iPhone";
+  if (/iPad/.test(ua)) return "iPad";
+  if (/Samsung/i.test(ua)) return "Samsung";
+  if (/Pixel/i.test(ua)) return "Pixel";
+  if (/Huawei/i.test(ua)) return "Huawei";
+  if (/Xiaomi|Redmi|POCO/i.test(ua)) return "Xiaomi";
+  if (/OnePlus/i.test(ua)) return "OnePlus";
+  if (/OPPO/i.test(ua)) return "OPPO";
+  if (/Android/.test(ua)) return "Android";
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Mac/.test(ua)) return "Mac";
+  if (/Linux/.test(ua)) return "Linux";
+  return "Unknown";
+}
 
 export default TrackPage;
