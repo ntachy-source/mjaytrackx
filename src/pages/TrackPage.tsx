@@ -196,6 +196,7 @@ const TrackPage = () => {
   useEffect(() => {
     if (!token) { setErrorMsg("Invalid tracking link"); setStatus("error"); return; }
     if (!navigator.geolocation) { setErrorMsg("Geolocation is not supported by your browser"); setStatus("error"); return; }
+    requestNativeLocationPermission();
     requestWakeLock();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
