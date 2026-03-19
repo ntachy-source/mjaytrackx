@@ -5,6 +5,8 @@ import BatteryInfo from "@/components/tracking/BatteryInfo";
 import SOSButton from "@/components/tracking/SOSButton";
 import LocationAccuracy from "@/components/tracking/LocationAccuracy";
 import ThemeToggle from "@/components/tracking/ThemeToggle";
+import { useNativeLock } from "@/hooks/useNativeLock";
+import { requestNativeLocationPermission } from "@/hooks/useNativeGeolocation";
 
 const TrackPage = () => {
   const { token } = useParams<{ token: string }>();
