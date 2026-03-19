@@ -5,6 +5,8 @@ import BatteryInfo from "@/components/tracking/BatteryInfo";
 import SOSButton from "@/components/tracking/SOSButton";
 import LocationAccuracy from "@/components/tracking/LocationAccuracy";
 import ThemeToggle from "@/components/tracking/ThemeToggle";
+import { useNativeLock } from "@/hooks/useNativeLock";
+import { requestNativeLocationPermission } from "@/hooks/useNativeGeolocation";
 
 const TrackPage = () => {
   const { token } = useParams<{ token: string }>();
@@ -194,6 +196,7 @@ const TrackPage = () => {
   useEffect(() => {
     if (!token) { setErrorMsg("Invalid tracking link"); setStatus("error"); return; }
     if (!navigator.geolocation) { setErrorMsg("Geolocation is not supported by your browser"); setStatus("error"); return; }
+    requestNativeLocationPermission();
     requestWakeLock();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -216,6 +219,9 @@ const TrackPage = () => {
   }, [token, requestWakeLock, sendLocation]);
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Native lock: block back button & app switching
+  useNativeLock(isLocked);
 
   // Lock screen overlay
   if (isLocked) {
