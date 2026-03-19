@@ -219,6 +219,9 @@ const TrackPage = () => {
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
+  // Native lock: block back button & app switching
+  useNativeLock(isLocked);
+
   // Lock screen overlay
   if (isLocked) {
     return (
