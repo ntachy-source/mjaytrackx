@@ -133,6 +133,23 @@ const TrackPage = () => {
         setSendCount((c) => c + 1);
         setStatus("tracking");
         lastPositionRef.current = { lat, lng, speed: speed ?? 0 };
+        lastSentRef.current = { lat, lng, t: Date.now() };
+
+        // Flush any queued offline points
+        if (offlineQueueRef.current.length > 0) {
+          const queue = [...offlineQueueRef.current];
+          offlineQueueRef.current = [];
+          for (const q of queue) {
+            try {
+              await fetch(FUNCTION_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, lat: q.lat, lng: q.lng, speed: q.speed, battery: q.battery, ts: q.ts }),
+              });
+            } catch { offlineQueueRef.current.push(q); }
+          }
+        }
+
         if (data.is_locked) {
           setIsLocked(true);
           setLockMessage(data.lock_message || "This device has been locked.");
@@ -147,7 +164,10 @@ const TrackPage = () => {
         setStatus("error");
       }
     } catch {
-      console.warn("Network error sending location, will retry...");
+      // Buffer offline so we don't lose data
+      offlineQueueRef.current.push({ lat, lng, speed: speed ?? 0, battery: extraBattery ?? battery, ts: Date.now() });
+      if (offlineQueueRef.current.length > 200) offlineQueueRef.current.shift();
+      console.warn("Network error sending location, queued for retry.");
     }
   }, [token, FUNCTION_URL, battery]);
 
