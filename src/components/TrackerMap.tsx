@@ -112,11 +112,12 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice, geo
     if (baseLayerRef.current) baseLayerRef.current.remove();
     if (labelsLayerRef.current) { labelsLayerRef.current.remove(); labelsLayerRef.current = null; }
 
-    baseLayerRef.current = L.tileLayer(cfg.url, {
+    const tileOpts: L.TileLayerOptions = {
       attribution: cfg.attribution,
       maxZoom: cfg.maxZoom,
-      subdomains: cfg.subdomains as any,
-    }).addTo(mapRef.current);
+    };
+    if (cfg.subdomains) (tileOpts as any).subdomains = cfg.subdomains;
+    baseLayerRef.current = L.tileLayer(cfg.url, tileOpts).addTo(mapRef.current);
 
     // Hybrid: add roads + labels overlay
     if (mapStyle === "hybrid") {
