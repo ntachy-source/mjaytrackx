@@ -88,7 +88,7 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice, geo
   const myLocMarkerRef = useRef<L.Marker | null>(null);
   const geofenceCirclesRef = useRef<L.Circle[]>([]);
   const hasFittedRef = useRef(false);
-  const [mapStyle, setMapStyle] = useState<MapStyle>("satellite");
+  const [mapStyle, setMapStyle] = useState<MapStyle>("hybrid");
   const [showStyles, setShowStyles] = useState(false);
 
   // Init map
