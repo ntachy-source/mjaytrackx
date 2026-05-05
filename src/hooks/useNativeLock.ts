@@ -12,15 +12,15 @@ export const useNativeLock = (isLocked: boolean) => {
     let backHandlerPromise: Promise<{ remove: () => void }> | null = null;
     let resumeHandlerPromise: Promise<{ remove: () => void }> | null = null;
 
-    // Dynamically import @capacitor/app so web builds don't fail
-    import(/* @vite-ignore */ "@capacitor/app")
-      .then(({ App }) => {
-        backHandlerPromise = App.addListener("backButton", () => {
-          // Do nothing — prevent exit when locked
-        }) as any;
-        resumeHandlerPromise = App.addListener("appStateChange", ({ isActive }) => {
+    // Runtime lookup so web bundle doesn't try to resolve @capacitor/app
+    const modName = "@capacitor/app";
+    (new Function("m", "return import(m)"))(modName)
+      .then((mod: any) => {
+        const App = mod.App;
+        backHandlerPromise = App.addListener("backButton", () => {});
+        resumeHandlerPromise = App.addListener("appStateChange", ({ isActive }: any) => {
           if (isActive && isLocked) document.body.style.overflow = "hidden";
-        }) as any;
+        });
       })
       .catch(() => {});
 
