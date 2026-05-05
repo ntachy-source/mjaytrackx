@@ -93,22 +93,33 @@
   }
 }
 
-/* Leaflet overrides for dark theme */
+/* Leaflet overrides */
 .leaflet-container {
   background: hsl(220 20% 7%) !important;
 }
-.leaflet-tile-pane {
-  filter: brightness(0.7) invert(1) contrast(1.2) hue-rotate(200deg) saturate(0.4) brightness(0.8);
-}
-.leaflet-control-zoom a {
+.leaflet-control-zoom a,
+.leaflet-control-layers-toggle {
   background: hsl(220 18% 10%) !important;
   color: hsl(155 100% 45%) !important;
   border-color: hsl(155 30% 18%) !important;
 }
+.leaflet-control-layers-expanded {
+  background: hsl(220 18% 10%) !important;
+  color: hsl(160 60% 85%) !important;
+  border: 1px solid hsl(155 30% 18%) !important;
+}
 
 @keyframes pulse-dot {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
+  50% { transform: scale(1.6); opacity: 0.4; }
+}
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); opacity: 0.8; }
+  100% { transform: rotate(360deg); opacity: 0.8; }
+}
+@keyframes ring-expand {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 @keyframes grid-scan {
   0% { transform: translateY(-100%); }
