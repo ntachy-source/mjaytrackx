@@ -232,17 +232,39 @@ const TrackPage = () => {
     requestWakeLock();
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        const spd = pos.coords.speed ? pos.coords.speed * 3.6 : 0;
-        setAccuracy(pos.coords.accuracy);
-        setAltitude(pos.coords.altitude);
-        setHeading(pos.coords.heading);
+        const { latitude, longitude, accuracy: acc, altitude: alt, heading: hdg, speed: rawSpd } = pos.coords;
+        const spd = rawSpd ? rawSpd * 3.6 : 0;
+
+        // Reject obviously bad fixes (low accuracy)
+        if (acc && acc > 100 && lastSentRef.current) return;
+
+        setAccuracy(acc);
+        setAltitude(alt);
+        setHeading(hdg);
         setCurrentSpeed(spd);
-        setCurrentLat(pos.coords.latitude);
-        setCurrentLng(pos.coords.longitude);
-        sendLocation(pos.coords.latitude, pos.coords.longitude, spd);
+        setCurrentLat(latitude);
+        setCurrentLng(longitude);
+
+        // Adaptive throttling: send if moved enough OR enough time elapsed
+        const last = lastSentRef.current;
+        const now = Date.now();
+        const moved = last ? distMeters(last, { lat: latitude, lng: longitude }) : Infinity;
+        const elapsed = last ? now - last.t : Infinity;
+
+        // Send when: first fix, moved >10m, OR stationary heartbeat every 30s,
+        // OR fast movement (>30km/h) — send every 5s for smoother trail
+        const shouldSend =
+          !last ||
+          moved > 10 ||
+          elapsed > 30000 ||
+          (spd > 30 && elapsed > 5000);
+
+        if (shouldSend) {
+          sendLocation(latitude, longitude, spd);
+        }
       },
       (err) => { setErrorMsg(err.message); setStatus("error"); },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 }
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 }
     );
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
