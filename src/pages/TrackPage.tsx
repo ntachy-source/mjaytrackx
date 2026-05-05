@@ -36,9 +36,21 @@ const TrackPage = () => {
   const watchIdRef = useRef<number | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const lastPositionRef = useRef<{ lat: number; lng: number; speed: number }>({ lat: 0, lng: 0, speed: 0 });
+  const lastSentRef = useRef<{ lat: number; lng: number; t: number } | null>(null);
   const retryIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const alarmRef = useRef<AudioContext | null>(null);
   const alarmOscRef = useRef<OscillatorNode | null>(null);
+  const offlineQueueRef = useRef<Array<{ lat: number; lng: number; speed: number; battery: number | null; ts: number }>>([]);
+
+  // Haversine distance in meters
+  const distMeters = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+    const R = 6371000;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
 
   const FUNCTION_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/track-location`;
 
