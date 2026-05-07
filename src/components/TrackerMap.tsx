@@ -12,7 +12,19 @@ interface TrackerMapProps {
   geofences?: Geofence[];
 }
 
-type MapStyle = "satellite" | "hybrid" | "streets" | "terrain" | "dark";
+type MapStyle =
+  | "satellite"
+  | "hybrid"
+  | "streets"
+  | "terrain"
+  | "dark"
+  | "light"
+  | "voyager"
+  | "topo"
+  | "watercolor"
+  | "transport"
+  | "nationalGeo"
+  | "oceans";
 
 const TILE_LAYERS: Record<MapStyle, { url: string; attribution: string; maxZoom: number; subdomains?: string }> = {
   satellite: {
@@ -42,6 +54,44 @@ const TILE_LAYERS: Record<MapStyle, { url: string; attribution: string; maxZoom:
     attribution: "CARTO",
     maxZoom: 19,
     subdomains: "abcd",
+  },
+  light: {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: "CARTO",
+    maxZoom: 19,
+    subdomains: "abcd",
+  },
+  voyager: {
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attribution: "CARTO",
+    maxZoom: 19,
+    subdomains: "abcd",
+  },
+  topo: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Esri",
+    maxZoom: 19,
+  },
+  watercolor: {
+    url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg",
+    attribution: "Stadia/Stamen",
+    maxZoom: 16,
+  },
+  transport: {
+    url: "https://{s}.tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=2a1b9b5c0e7e4e5a8c5a8c5a8c5a8c5a",
+    attribution: "Thunderforest",
+    maxZoom: 19,
+    subdomains: "abc",
+  },
+  nationalGeo: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Esri/NatGeo",
+    maxZoom: 16,
+  },
+  oceans: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Esri",
+    maxZoom: 13,
   },
 };
 
@@ -278,7 +328,13 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice, geo
     { id: "hybrid", label: "Hybrid" },
     { id: "streets", label: "Streets" },
     { id: "terrain", label: "Terrain" },
+    { id: "topo", label: "Topographic" },
     { id: "dark", label: "Dark" },
+    { id: "light", label: "Light" },
+    { id: "voyager", label: "Voyager" },
+    { id: "nationalGeo", label: "Nat Geo" },
+    { id: "oceans", label: "Oceans" },
+    { id: "watercolor", label: "Watercolor" },
   ];
 
   return (
