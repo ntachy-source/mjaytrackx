@@ -328,7 +328,13 @@ const TrackerMap = ({ devices, selectedDevice, onSelectDevice, followDevice, geo
     { id: "hybrid", label: "Hybrid" },
     { id: "streets", label: "Streets" },
     { id: "terrain", label: "Terrain" },
+    { id: "topo", label: "Topographic" },
     { id: "dark", label: "Dark" },
+    { id: "light", label: "Light" },
+    { id: "voyager", label: "Voyager" },
+    { id: "nationalGeo", label: "Nat Geo" },
+    { id: "oceans", label: "Oceans" },
+    { id: "watercolor", label: "Watercolor" },
   ];
 
   return (
