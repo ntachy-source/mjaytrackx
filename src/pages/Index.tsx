@@ -50,6 +50,7 @@ const Index = () => {
       onSelectDevice={handleSelectDevice}
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
+      onUpdateDevice={updateDevice}
       onGenerateShareToken={generateShareToken}
       geofences={geofences}
       onAddGeofence={addGeofence}
