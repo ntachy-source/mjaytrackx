@@ -143,6 +143,23 @@ export const useDevices = () => {
     }
   };
 
+  const updateDevice = async (
+    id: string,
+    updates: { name?: string; imei?: string | null; phoneNumber?: string | null }
+  ) => {
+    const payload: Record<string, unknown> = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.imei !== undefined) payload.imei = updates.imei;
+    if (updates.phoneNumber !== undefined) payload.phone_number = updates.phoneNumber;
+    const { error } = await supabase.from("devices").update(payload).eq("id", id);
+    if (error) {
+      toast({ title: "Error updating device", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Device updated" });
+      await fetchDevices();
+    }
+  };
+
   const sendLocation = async (deviceId: string, lat: number, lng: number, speed?: number, battery?: number) => {
     const { error } = await supabase.from("locations").insert({
       device_id: deviceId,
