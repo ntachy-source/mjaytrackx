@@ -124,6 +124,16 @@ const DevicePanel = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        setEditDevice(device);
+                      }}
+                      className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                      title="Edit device"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onDeleteDevice(device.id);
                       }}
                       className="p-1 text-muted-foreground hover:text-destructive transition-colors"
