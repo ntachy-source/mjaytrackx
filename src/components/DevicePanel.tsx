@@ -41,6 +41,7 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
+  onUpdateDevice,
   onGenerateShareToken,
   geofences,
   onAddGeofence,
@@ -51,6 +52,7 @@ const DevicePanel = ({
 }: DevicePanelProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [editDevice, setEditDevice] = useState<TrackedDevice | null>(null);
 
   const handleShareLink = async (device: TrackedDevice) => {
     let token = device.shareToken;
