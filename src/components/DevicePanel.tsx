@@ -15,6 +15,7 @@ interface DevicePanelProps {
   onSelectDevice: (device: TrackedDevice) => void;
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
+  onUpdateDevice: (id: string, updates: { name?: string; imei?: string | null; phoneNumber?: string | null }) => Promise<void>;
   onGenerateShareToken: (deviceId: string) => Promise<string | null>;
   geofences: Geofence[];
   onAddGeofence: (deviceId: string, name: string, lat: number, lng: number, radius: number) => Promise<void>;
