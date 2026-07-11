@@ -209,7 +209,7 @@ export const useDevices = () => {
     };
   }, [user, fetchDevices, requestPermission]);
 
-  return { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken, refetch: fetchDevices };
+  return { devices, loading, addDevice, deleteDevice, updateDevice, sendLocation, generateShareToken, refetch: fetchDevices };
 };
 
 function formatTimeAgo(date: Date): string {
