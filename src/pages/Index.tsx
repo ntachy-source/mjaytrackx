@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const { user, loading: authLoading } = useAuth();
-  const { devices, loading, addDevice, deleteDevice, sendLocation, generateShareToken } = useDevices();
+  const { devices, loading, addDevice, deleteDevice, updateDevice, sendLocation, generateShareToken } = useDevices();
   const { geofences, addGeofence, deleteGeofence } = useGeofences(devices);
   const [selectedDevice, setSelectedDevice] = useState<TrackedDevice | null>(null);
   const [panelOpen, setPanelOpen] = useState(true);
@@ -50,6 +50,7 @@ const Index = () => {
       onSelectDevice={handleSelectDevice}
       onAddDevice={addDevice}
       onDeleteDevice={deleteDevice}
+      onUpdateDevice={updateDevice}
       onGenerateShareToken={generateShareToken}
       geofences={geofences}
       onAddGeofence={addGeofence}

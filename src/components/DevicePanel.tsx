@@ -2,8 +2,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
 import { Geofence } from "@/hooks/useGeofences";
-import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, Copy, CheckCircle } from "lucide-react";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, CheckCircle, Pencil } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
+import EditDeviceDialog from "./EditDeviceDialog";
 import AddGeofenceDialog from "./AddGeofenceDialog";
 import GeofenceList from "./GeofenceList";
 import TrackingControls from "./TrackingControls";
@@ -14,6 +15,7 @@ interface DevicePanelProps {
   onSelectDevice: (device: TrackedDevice) => void;
   onAddDevice: (name: string, imei?: string, phoneNumber?: string) => Promise<void>;
   onDeleteDevice: (id: string) => Promise<void>;
+  onUpdateDevice: (id: string, updates: { name?: string; imei?: string | null; phoneNumber?: string | null }) => Promise<void>;
   onGenerateShareToken: (deviceId: string) => Promise<string | null>;
   geofences: Geofence[];
   onAddGeofence: (deviceId: string, name: string, lat: number, lng: number, radius: number) => Promise<void>;
@@ -39,6 +41,7 @@ const DevicePanel = ({
   onSelectDevice,
   onAddDevice,
   onDeleteDevice,
+  onUpdateDevice,
   onGenerateShareToken,
   geofences,
   onAddGeofence,
@@ -49,6 +52,7 @@ const DevicePanel = ({
 }: DevicePanelProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [editDevice, setEditDevice] = useState<TrackedDevice | null>(null);
 
   const handleShareLink = async (device: TrackedDevice) => {
     let token = device.shareToken;
@@ -117,6 +121,16 @@ const DevicePanel = ({
                         <span className="font-mono-data">{device.battery}%</span>
                       </span>
                     )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditDevice(device);
+                      }}
+                      className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                      title="Edit device"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -204,6 +218,12 @@ const DevicePanel = ({
       </AnimatePresence>
 
       <TrackingControls device={selectedDevice} following={following} onToggleFollow={onToggleFollow} />
+      <EditDeviceDialog
+        device={editDevice}
+        open={!!editDevice}
+        onOpenChange={(o) => !o && setEditDevice(null)}
+        onSave={onUpdateDevice}
+      />
     </div>
   );
 };
