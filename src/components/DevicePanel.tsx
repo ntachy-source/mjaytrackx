@@ -218,6 +218,12 @@ const DevicePanel = ({
       </AnimatePresence>
 
       <TrackingControls device={selectedDevice} following={following} onToggleFollow={onToggleFollow} />
+      <EditDeviceDialog
+        device={editDevice}
+        open={!!editDevice}
+        onOpenChange={(o) => !o && setEditDevice(null)}
+        onSave={onUpdateDevice}
+      />
     </div>
   );
 };
