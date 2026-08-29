@@ -8,6 +8,13 @@
       "when": 1788016148773,
       "tag": "0000_android_fleet_backend_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788016217179,
+      "tag": "0001_fleet_profiles_devices",
+      "breakpoints": true
     }
   ]
 }

@@ -54,40 +54,85 @@ export type Database = {
       }
       devices: {
         Row: {
+          android_version: string | null
+          app_version: string | null
+          battery_level: number | null
           created_at: string
+          device_id: string | null
           id: string
           imei: string | null
+          is_charging: boolean
           is_locked: boolean
+          last_seen: string | null
+          location_permission_status: string | null
           lock_message: string | null
+          manufacturer: string | null
+          model: string | null
           name: string
+          network_type: string | null
           phone_number: string | null
+          platform: string
           play_alarm: boolean
           share_token: string | null
-          user_id: string
+          status: string
+          token_hash: string | null
+          tracking_status: boolean
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
+          android_version?: string | null
+          app_version?: string | null
+          battery_level?: number | null
           created_at?: string
+          device_id?: string | null
           id?: string
           imei?: string | null
+          is_charging?: boolean
           is_locked?: boolean
+          last_seen?: string | null
+          location_permission_status?: string | null
           lock_message?: string | null
+          manufacturer?: string | null
+          model?: string | null
           name: string
+          network_type?: string | null
           phone_number?: string | null
+          platform?: string
           play_alarm?: boolean
           share_token?: string | null
-          user_id: string
+          status?: string
+          token_hash?: string | null
+          tracking_status?: boolean
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          android_version?: string | null
+          app_version?: string | null
+          battery_level?: number | null
           created_at?: string
+          device_id?: string | null
           id?: string
           imei?: string | null
+          is_charging?: boolean
           is_locked?: boolean
+          last_seen?: string | null
+          location_permission_status?: string | null
           lock_message?: string | null
+          manufacturer?: string | null
+          model?: string | null
           name?: string
+          network_type?: string | null
           phone_number?: string | null
+          platform?: string
           play_alarm?: boolean
           share_token?: string | null
-          user_id?: string
+          status?: string
+          token_hash?: string | null
+          tracking_status?: boolean
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -137,7 +182,10 @@ export type Database = {
       }
       locations: {
         Row: {
+          accuracy: number | null
+          altitude: number | null
           battery: number | null
+          bearing: number | null
           created_at: string
           device_id: string
           id: string
@@ -147,7 +195,10 @@ export type Database = {
           timestamp: string
         }
         Insert: {
+          accuracy?: number | null
+          altitude?: number | null
           battery?: number | null
+          bearing?: number | null
           created_at?: string
           device_id: string
           id?: string
@@ -157,7 +208,10 @@ export type Database = {
           timestamp?: string
         }
         Update: {
+          accuracy?: number | null
+          altitude?: number | null
           battery?: number | null
+          bearing?: number | null
           created_at?: string
           device_id?: string
           id?: string
@@ -180,21 +234,27 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
+          status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
