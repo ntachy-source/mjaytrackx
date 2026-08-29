@@ -268,7 +268,7 @@ export type Database = {
       is_owner_of_device: { Args: { _device_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super_admin" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -396,7 +396,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super_admin", "viewer"],
     },
   },
 } as const

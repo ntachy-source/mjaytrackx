@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788016148773,
+      "tag": "0000_android_fleet_backend_schema",
+      "breakpoints": true
+    }
+  ]
+}
