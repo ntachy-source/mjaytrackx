@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -52,42 +52,201 @@ export type Database = {
           },
         ]
       }
-      devices: {
+      audit_logs: {
         Row: {
-          created_at: string
+          action: string
+          admin_id: string | null
+          device_id: string | null
           id: string
-          imei: string | null
-          is_locked: boolean
-          lock_message: string | null
-          name: string
-          phone_number: string | null
-          play_alarm: boolean
-          share_token: string | null
-          user_id: string
+          metadata: Json
+          timestamp: string
         }
         Insert: {
-          created_at?: string
+          action: string
+          admin_id?: string | null
+          device_id?: string | null
           id?: string
-          imei?: string | null
-          is_locked?: boolean
-          lock_message?: string | null
-          name: string
-          phone_number?: string | null
-          play_alarm?: boolean
-          share_token?: string | null
-          user_id: string
+          metadata?: Json
+          timestamp?: string
         }
         Update: {
+          action?: string
+          admin_id?: string | null
+          device_id?: string | null
+          id?: string
+          metadata?: Json
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commands: {
+        Row: {
+          acknowledged_at: string | null
+          command: string
+          created_at: string
+          created_by: string | null
+          device_id: string
+          id: string
+          payload: Json
+          result: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          command: string
           created_at?: string
+          created_by?: string | null
+          device_id: string
+          id?: string
+          payload?: Json
+          result?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          command?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          id?: string
+          payload?: Json
+          result?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_config: {
+        Row: {
+          device_id: string
+          distance_filter: number
+          tracking_enabled: boolean
+          tracking_interval: number
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          distance_filter?: number
+          tracking_enabled?: boolean
+          tracking_interval?: number
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          distance_filter?: number
+          tracking_enabled?: boolean
+          tracking_interval?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_config_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devices: {
+        Row: {
+          android_version: string | null
+          app_version: string | null
+          battery_level: number | null
+          created_at: string
+          device_id: string | null
+          id: string
+          imei: string | null
+          is_charging: boolean
+          is_locked: boolean
+          last_seen: string | null
+          location_permission_status: string | null
+          lock_message: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string
+          network_type: string | null
+          phone_number: string | null
+          platform: string
+          play_alarm: boolean
+          share_token: string | null
+          status: string
+          token_hash: string | null
+          tracking_status: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          android_version?: string | null
+          app_version?: string | null
+          battery_level?: number | null
+          created_at?: string
+          device_id?: string | null
           id?: string
           imei?: string | null
+          is_charging?: boolean
           is_locked?: boolean
+          last_seen?: string | null
+          location_permission_status?: string | null
           lock_message?: string | null
-          name?: string
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          network_type?: string | null
           phone_number?: string | null
+          platform?: string
           play_alarm?: boolean
           share_token?: string | null
-          user_id?: string
+          status?: string
+          token_hash?: string | null
+          tracking_status?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          android_version?: string | null
+          app_version?: string | null
+          battery_level?: number | null
+          created_at?: string
+          device_id?: string | null
+          id?: string
+          imei?: string | null
+          is_charging?: boolean
+          is_locked?: boolean
+          last_seen?: string | null
+          location_permission_status?: string | null
+          lock_message?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          network_type?: string | null
+          phone_number?: string | null
+          platform?: string
+          play_alarm?: boolean
+          share_token?: string | null
+          status?: string
+          token_hash?: string | null
+          tracking_status?: boolean
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -137,7 +296,10 @@ export type Database = {
       }
       locations: {
         Row: {
+          accuracy: number | null
+          altitude: number | null
           battery: number | null
+          bearing: number | null
           created_at: string
           device_id: string
           id: string
@@ -147,7 +309,10 @@ export type Database = {
           timestamp: string
         }
         Insert: {
+          accuracy?: number | null
+          altitude?: number | null
           battery?: number | null
+          bearing?: number | null
           created_at?: string
           device_id: string
           id?: string
@@ -157,7 +322,10 @@ export type Database = {
           timestamp?: string
         }
         Update: {
+          accuracy?: number | null
+          altitude?: number | null
           battery?: number | null
+          bearing?: number | null
           created_at?: string
           device_id?: string
           id?: string
@@ -180,21 +348,27 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
+          status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -268,7 +442,7 @@ export type Database = {
       is_owner_of_device: { Args: { _device_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super_admin" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -396,7 +570,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super_admin", "viewer"],
     },
   },
 } as const
