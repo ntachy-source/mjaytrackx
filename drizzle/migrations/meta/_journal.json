@@ -15,6 +15,13 @@
       "when": 1788016217179,
       "tag": "0001_fleet_profiles_devices",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788016246278,
+      "tag": "0002_fleet_config_commands_audit",
+      "breakpoints": true
     }
   ]
 }

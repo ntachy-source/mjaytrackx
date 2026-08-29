@@ -52,6 +52,120 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          device_id: string | null
+          id: string
+          metadata: Json
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          device_id?: string | null
+          id?: string
+          metadata?: Json
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          device_id?: string | null
+          id?: string
+          metadata?: Json
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commands: {
+        Row: {
+          acknowledged_at: string | null
+          command: string
+          created_at: string
+          created_by: string | null
+          device_id: string
+          id: string
+          payload: Json
+          result: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          command: string
+          created_at?: string
+          created_by?: string | null
+          device_id: string
+          id?: string
+          payload?: Json
+          result?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          command?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string
+          id?: string
+          payload?: Json
+          result?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commands_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_config: {
+        Row: {
+          device_id: string
+          distance_filter: number
+          tracking_enabled: boolean
+          tracking_interval: number
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          distance_filter?: number
+          tracking_enabled?: boolean
+          tracking_interval?: number
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          distance_filter?: number
+          tracking_enabled?: boolean
+          tracking_interval?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_config_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           android_version: string | null
