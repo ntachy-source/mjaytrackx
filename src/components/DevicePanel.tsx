@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrackedDevice } from "@/hooks/useDevices";
 import { Geofence } from "@/hooks/useGeofences";
-import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Link, CheckCircle, Pencil } from "lucide-react";
+import { Smartphone, Battery, MapPin, Clock, Zap, Trash2, Hash, Phone, Pencil } from "lucide-react";
 import AddDeviceDialog from "./AddDeviceDialog";
 import EditDeviceDialog from "./EditDeviceDialog";
 import AddGeofenceDialog from "./AddGeofenceDialog";
