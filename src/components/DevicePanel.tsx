@@ -194,24 +194,9 @@ const DevicePanel = ({
                   <InfoRow icon={<Phone className="w-3 h-3" />} label="Phone" value={selectedDevice.phoneNumber} />
                 )}
               </div>
-              {/* Share tracking link button */}
-              <button
-                onClick={() => handleShareLink(selectedDevice)}
-                disabled={generating}
-                className="w-full mt-2 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-mono-data flex items-center justify-center gap-2 hover:bg-accent/80 transition-colors"
-              >
-                {copiedId === selectedDevice.id ? (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5" /> LINK COPIED!
-                  </>
-                ) : generating ? (
-                  <>GENERATING...</>
-                ) : (
-                  <>
-                    <Link className="w-3.5 h-3.5" /> SHARE TRACKING LINK
-                  </>
-                )}
-              </button>
+              <p className="text-[10px] text-muted-foreground font-mono-data leading-relaxed">
+                Telemetry is reported by the native Android client via the device API.
+              </p>
             </div>
           </motion.div>
         )}
